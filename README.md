@@ -49,7 +49,7 @@
 ### 1. Clone repository
 
 ```bash
-git clone <repo-url>
+git clone [<repo-url>](https://github.com/chusaubanh/ThanhVinhStudio)
 cd ThanhVinhStudio
 ```
 
