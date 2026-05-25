@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ThanhVinhStudio — SaaS Layout Preview</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --main:#0c0c0c;--surface:#141517;--elevated:#1e1f23;--hover:#26282d;
+  --border:rgba(255,255,255,.08);--border-focus:rgba(255,255,255,.15);
+  --text:#ededed;--text-s:#8a8d93;--text-m:#5e6065;
+  --accent:#c5a059;--accent-l:#e0c286;--accent-f:rgba(197,160,89,.1);
+  --success:#10b981;--danger:#ef4444;
+  --purple:#a78bfa;--purple-f:rgba(167,139,250,.15);
+  --info:#3b82f6;--info-f:rgba(59,130,246,.1);
+}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--main);color:var(--text);overflow:hidden;-webkit-font-smoothing:antialiased}
+.font-outfit{font-family:'Outfit',sans-serif}
+::-webkit-scrollbar{width:5px;height:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--elevated);border-radius:4px}
+
+/* ═══ BROWSER BAR ═══ */
+.browser-bar{height:36px;background:#1a1b1d;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:8px}
+.dots{display:flex;gap:6px}.dots span{width:10px;height:10px;border-radius:50%}.dots .r{background:#ff5f57}.dots .y{background:#febc2e}.dots .g{background:#28c840}
+.url{flex:1;margin:0 12px;background:var(--elevated);border:1px solid var(--border);border-radius:6px;padding:4px 12px;font-size:11px;color:var(--text-m);display:flex;align-items:center;gap:6px}
+.url svg{width:12px;height:12px;color:var(--text-m);flex-shrink:0}
+.url span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.url-label{font-size:10px;color:var(--text-m);font-weight:600}
+
+/* ═══ PAGE WRAPPER ═══ */
+.wrap{display:flex;flex-direction:column;height:calc(100vh - 36px)}
+
+/* ═══ APP LAYOUT ═══ */
+.app{display:flex;flex:1;overflow:hidden}
+
+/* ─── Icon Nav ─── */
+.nav{width:64px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;align-items:center;padding:16px 0;gap:4px;flex-shrink:0}
+.nav-logo{width:36px;height:36px;border-radius:50%;overflow:hidden;cursor:pointer;margin-bottom:12px;box-shadow:0 0 0 1px var(--border);transition:box-shadow .15s}
+.nav-logo:hover{box-shadow:0 0 0 1px rgba(197,160,89,.4)}
+.nav-logo img{width:100%;height:100%;object-fit:cover}
+.nav-btn{width:44px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;color:var(--text-m);position:relative;border:none;background:none}
+.nav-btn:hover{background:var(--elevated);color:var(--text-s)}
+.nav-btn.active{background:var(--accent-f);color:var(--accent)}
+.nav-btn svg{width:20px;height:20px}
+.nav-btn .tip{position:absolute;left:54px;background:var(--elevated);color:var(--text);font-size:11px;font-weight:600;padding:4px 10px;border-radius:6px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s;z-index:10;border:1px solid var(--border)}
+.nav-btn:hover .tip{opacity:1}
+.nav-spacer{flex:1}
+.nav-divider{width:24px;height:1px;background:var(--border);margin:4px 0}
+
+/* ─── Main ─── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+
+/* ─── Topbar ─── */
+.topbar{height:48px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.topbar-title{font-size:13px;font-weight:700;color:var(--text)}
+.topbar-crumb{font-size:11px;color:var(--text-m)}
+.topbar-spacer{flex:1}
+.topbar-search{display:flex;align-items:center;gap:6px;background:var(--elevated);border:1px solid var(--border);border-radius:8px;padding:5px 10px;transition:border-color .15s}
+.topbar-search:focus-within{border-color:var(--accent)}
+.topbar-search svg{width:13px;height:13px;color:var(--text-m);flex-shrink:0}
+.topbar-search input{background:none;border:none;outline:none;color:var(--text);font-size:11px;width:160px}
+.topbar-search input::placeholder{color:var(--text-m)}
+.topbar-btn{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-m);transition:all .15s;border:none;background:none}
+.topbar-btn:hover{background:var(--elevated);color:var(--text)}
+.topbar-btn svg{width:15px;height:15px}
+
+/* ─── Content ─── */
+.content{flex:1;overflow-y:auto;position:relative}
+.page{position:absolute;inset:0;overflow-y:auto;padding:24px;opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease;transform:translateY(6px)}
+.page.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+/* ═══ SHARED COMPONENTS ═══ */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:12px}
+.panel-p{padding:16px}
+.panel-title{font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;margin-bottom:12px}
+.panel-title svg{width:14px;height:14px;color:var(--accent)}
+
+.btn-gold{background:linear-gradient(135deg,#c5a059,#e0c286);color:#000;font-weight:700;font-size:11px;padding:10px 18px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:'Outfit',sans-serif;white-space:nowrap;transition:all .15s}
+.btn-gold:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn-sm{background:linear-gradient(135deg,#c5a059,#e0c286);color:#000;font-weight:700;font-size:11px;padding:8px 14px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'Outfit',sans-serif;white-space:nowrap;transition:all .15s}
+.btn-sm:hover{filter:brightness(1.1)}
+.btn-ghost{background:var(--elevated);border:1px solid var(--border);color:var(--text-s);font-weight:600;font-size:11px;padding:8px 14px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}
+.btn-ghost:hover{border-color:var(--border-focus);color:var(--text)}
+select.sel{background:var(--elevated);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:11px;outline:none;width:100%;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238a8d93' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;transition:border-color .15s}
+select.sel:focus{border-color:var(--accent)}
+.chip-row{display:flex;flex-wrap:wrap;gap:4px}
+.chip{font-size:10px;padding:5px 10px;border-radius:6px;cursor:pointer;transition:all .15s;background:var(--elevated);color:var(--text-s);border:1px solid transparent}
+.chip.on{background:var(--accent-f);color:var(--accent);border-color:rgba(197,160,89,.3)}
+.range-row{display:flex;align-items:center;gap:8px}
+.range-row label{font-size:10px;color:var(--text-s);min-width:55px}
+.range-row input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+.range-row .val{font-size:10px;color:var(--accent);font-family:'Courier New',monospace;min-width:30px;text-align:right}
+.toggle{width:34px;height:18px;border-radius:9px;background:var(--elevated);border:1px solid var(--border);position:relative;cursor:pointer;transition:all .15s}
+.toggle.on{background:var(--accent);border-color:var(--accent)}
+.toggle::after{content:'';position:absolute;width:14px;height:14px;border-radius:50%;background:#fff;top:1px;left:1px;transition:transform .15s}
+.toggle.on::after{transform:translateX(16px)}
+
+/* ═══ DASHBOARD ═══ */
+.dash-greet h1{font-family:'Outfit',sans-serif;font-size:20px;font-weight:700}
+.dash-greet p{font-size:12px;color:var(--text-s);margin-top:2px}
+.dash-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:16px 0}
+.d-stat{display:flex;align-items:center;gap:10px;padding:12px}
+.d-stat-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.d-stat-icon svg{width:18px;height:18px}
+.d-stat-val{font-family:'Outfit',sans-serif;font-size:18px;font-weight:800;color:var(--accent)}
+.d-stat-label{font-size:10px;color:var(--text-s)}
+.dash-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;margin-top:16px}
+.dash-col{display:flex;flex-direction:column;gap:12px}
+.quick-input{display:flex;gap:8px;margin-bottom:10px}
+.quick-input input{flex:1;background:var(--main);border:1px solid var(--border);border-radius:8px;padding:9px 12px;color:var(--text);font-size:12px;outline:none;transition:border-color .15s}
+.quick-input input:focus{border-color:var(--accent)}
+.quick-input input::placeholder{color:var(--text-m)}
+.recent-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;cursor:pointer;transition:background .1s}
+.recent-item:hover{background:var(--hover)}
+.recent-play{width:24px;height:24px;border-radius:5px;background:var(--accent-f);color:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.recent-play svg{width:9px;height:9px}
+.recent-name{flex:1;font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.recent-size{font-size:10px;color:var(--text-m);flex-shrink:0}
+.recent-time{font-size:10px;color:var(--text-m);flex-shrink:0}
+.actions-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.action-btn{display:flex;align-items:center;gap:8px;padding:10px;background:var(--elevated);border:1px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s}
+.action-btn:hover{border-color:var(--border-focus);transform:translateY(-1px)}
+.action-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.action-icon svg{width:15px;height:15px}
+.action-label{font-size:12px;font-weight:600}
+.action-desc{font-size:10px;color:var(--text-m)}
+.action-arrow{margin-left:auto;color:var(--text-m)}
+.action-arrow svg{width:14px;height:14px}
+.breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.bk-item{text-align:center;padding:12px 8px;background:var(--elevated);border-radius:10px}
+.bk-icon{width:32px;height:32px;border-radius:8px;background:var(--accent-f);color:var(--accent);display:flex;align-items:center;justify-content:center;margin:0 auto 6px}
+.bk-icon svg{width:16px;height:16px}
+.bk-val{font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;color:var(--accent)}
+.bk-label{font-size:10px;color:var(--text-s)}
+.bk-bar{margin-top:6px;height:3px;background:var(--main);border-radius:2px;overflow:hidden}
+.bk-bar-fill{height:100%;border-radius:2px;background:var(--accent)}
+
+/* ═══ STUDIO ═══ */
+.studio-wrap{display:flex;height:100%}
+.studio-sidebar{width:300px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;padding:16px;gap:14px;display:flex;flex-direction:column;flex-shrink:0}
+.studio-content{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.mode-tabs{display:flex;gap:4px;padding:8px 16px;background:var(--surface);border-bottom:1px solid var(--border)}
+.mode-tab{font-size:11px;font-weight:600;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:5px;background:transparent;color:var(--text-s);border:none}
+.mode-tab.active{background:linear-gradient(135deg,#c5a059,#e0c286);color:#000;box-shadow:0 2px 10px rgba(197,160,89,.2)}
+.mode-tab svg{width:12px;height:12px}
+.studio-body{flex:1;padding:16px;overflow-y:auto;display:flex;flex-direction:column;gap:10px}
+.studio-body h2{font-size:13px;font-weight:600}
+.pause-bar{display:flex;align-items:center;gap:6px}
+.pause-bar .label{font-size:9px;color:var(--text-m);text-transform:uppercase;letter-spacing:.5px}
+.pause-btn{font-size:9px;font-family:'Courier New',monospace;padding:3px 8px;border-radius:4px;background:var(--elevated);color:var(--text-s);border:1px solid var(--border);cursor:pointer}
+textarea.ta{flex:1;min-height:180px;background:var(--main);border:1px solid var(--border);border-radius:10px;padding:14px;color:var(--text);font-size:13px;resize:none;outline:none;font-family:'Inter',sans-serif;line-height:1.6}
+textarea.ta:focus{border-color:var(--accent)}
+.lora-item{display:flex;align-items:center;gap:8px;padding:8px;background:var(--elevated);border-radius:8px}
+.lora-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.lora-info{flex:1;min-width:0}
+.lora-name{font-size:11px;font-weight:600;color:var(--text)}
+.lora-src{font-size:9px;color:var(--text-m)}
+.badge-active{font-size:8px;padding:2px 6px;border-radius:4px;background:var(--purple-f);color:var(--purple);font-weight:700}
+
+/* ═══ VOICE LIBRARY ═══ */
+.voice-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.voice-card{padding:14px;cursor:pointer;transition:all .2s}
+.voice-card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.voice-card.selected{border-color:var(--accent);box-shadow:0 0 0 1px rgba(197,160,89,.3)}
+.voice-avatar{width:40px;height:40px;border-radius:10px;background:var(--accent-f);color:var(--accent);display:flex;align-items:center;justify-content:center;font-family:'Outfit',sans-serif;font-size:16px;font-weight:800;margin-bottom:8px}
+.voice-card h3{font-size:13px;font-weight:700;margin-bottom:2px}
+.voice-card .desc{font-size:10px;color:var(--text-s);margin-bottom:6px}
+.voice-tags{display:flex;gap:3px;flex-wrap:wrap}
+.voice-tag{font-size:9px;padding:2px 6px;border-radius:4px;background:var(--elevated);color:var(--text-m)}
+.voice-tag.gold{background:var(--accent-f);color:var(--accent)}
+
+/* ═══ HISTORY ═══ */
+.hist-table{width:100%;border-collapse:collapse}
+.hist-table th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text-m);padding:10px 12px;border-bottom:1px solid var(--border)}
+.hist-table td{padding:10px 12px;font-size:12px;border-bottom:1px solid rgba(255,255,255,.03)}
+.hist-table tbody tr{transition:background .1s}
+.hist-table tbody tr:hover{background:var(--hover)}
+.hist-play{width:26px;height:26px;border-radius:6px;background:var(--accent-f);color:var(--accent);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:all .15s}
+.hist-play:hover{background:var(--accent);color:#000}
+.hist-play svg{width:10px;height:10px}
+.badge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:600}
+.badge-preset{background:var(--accent-f);color:var(--accent)}
+.badge-clone{background:var(--info-f);color:var(--info)}
+.badge-dialogue{background:var(--purple-f);color:var(--purple)}
+
+/* ═══ SETTINGS ═══ */
+.sett-grid{display:grid;grid-template-columns:180px 1fr;gap:16px}
+.sett-nav{display:flex;flex-direction:column;gap:2px}
+.sett-nav-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;color:var(--text-s);cursor:pointer;transition:all .15s;background:none;border:none}
+.sett-nav-btn:hover{background:var(--elevated);color:var(--text)}
+.sett-nav-btn.active{background:var(--accent-f);color:var(--accent)}
+.sett-nav-btn svg{width:15px;height:15px}
+.sett-row{display:flex;align-items:center;justify-content:between;padding:12px 0;border-bottom:1px solid var(--border)}
+.sett-row:last-child{border-bottom:none}
+.sett-label{font-size:12px;font-weight:600}
+.sett-desc{font-size:10px;color:var(--text-m);margin-top:2px}
+
+/* ═══ FEATURES ═══ */
+.feat-head{text-align:center;margin-bottom:24px}
+.feat-head .eyebrow{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--accent);margin-bottom:6px}
+.feat-head h1{font-family:'Outfit',sans-serif;font-size:24px;font-weight:800;background:linear-gradient(135deg,#fff 0%,#e0c286 50%,#c5a059 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+.feat-head p{font-size:12px;color:var(--text-s);max-width:420px;margin:0 auto}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.feat-card{padding:16px;transition:all .2s}
+.feat-card:hover{border-color:rgba(197,160,89,.3);transform:translateY(-2px)}
+.feat-card-icon{width:40px;height:40px;border-radius:10px;background:var(--accent-f);color:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:10px}
+.feat-card-icon svg{width:20px;height:20px}
+.feat-card h3{font-size:13px;font-weight:700;margin-bottom:2px}
+.feat-card .tagline{font-size:10px;color:var(--accent);margin-bottom:6px}
+.feat-card ul{list-style:none;display:flex;flex-direction:column;gap:3px}
+.feat-card li{font-size:11px;color:var(--text-s);display:flex;align-items:flex-start;gap:5px}
+.feat-card li::before{content:'▸';color:var(--accent);flex-shrink:0}
+
+/* ═══ GUIDE ═══ */
+.guide-grid{display:grid;grid-template-columns:170px 1fr;gap:20px}
+.guide-toc nav{display:flex;flex-direction:column;gap:2px}
+.guide-toc a{display:flex;align-items:center;gap:5px;padding:6px 10px;border-radius:6px;font-size:11px;font-weight:500;color:var(--text-s);text-decoration:none;transition:all .15s}
+.guide-toc a:hover{background:var(--elevated);color:var(--text)}
+.guide-toc a.active{background:var(--accent-f);color:var(--accent)}
+.guide-toc a svg{width:13px;height:13px}
+.guide-toc-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-m);margin-bottom:8px}
+.guide-section h2{font-family:'Outfit',sans-serif;font-size:16px;font-weight:700;padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.guide-section p{font-size:12px;color:var(--text-s);line-height:1.7}
+.guide-callout{padding:10px 14px;border-radius:8px;font-size:11px;line-height:1.5;margin-top:8px}
+.callout-warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);color:#fbbf24}
+.callout-info{background:var(--info-f);border:1px solid rgba(59,130,246,.2);color:#93c5fd}
+
+/* ═══ PLAYER BAR ═══ */
+.player{position:absolute;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:10px;z-index:10}
+.player .gen-btn{background:linear-gradient(135deg,#c5a059,#e0c286);color:#000;font-weight:700;font-size:11px;padding:10px 16px;border-radius:8px;border:none;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:'Outfit',sans-serif;white-space:nowrap;transition:all .15s}
+.player .gen-btn:hover{filter:brightness(1.1)}
+.player .ctrl{display:flex;align-items:center;gap:8px;flex:1}
+.player .play{width:34px;height:34px;border-radius:8px;background:var(--accent-f);color:var(--accent);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:all .15s}
+.player .play:hover{background:var(--accent);color:#000}
+.player .play svg{width:13px;height:13px}
+.player .wave{flex:1;height:32px;display:flex;align-items:center;gap:1.5px;padding:0 8px}
+.player .wave span{width:3px;border-radius:2px;background:rgba(197,160,89,.12);transition:all .2s}
+.player .wave span.on{background:linear-gradient(to top,rgba(197,160,89,.4),var(--accent));box-shadow:0 0 6px rgba(197,160,89,.2)}
+.player .wave.playing span.on{animation:wavePulse 1.2s ease-in-out infinite alternate}
+.player .wave.playing span.on:nth-child(odd){animation-delay:.1s}
+.player .wave.playing span.on:nth-child(3n){animation-delay:.2s}
+.player .wave.playing span.on:nth-child(5n){animation-delay:.3s}
+@keyframes wavePulse{0%{opacity:.7;transform:scaleY(.85)}100%{opacity:1;transform:scaleY(1.1)}}
+.player .time{font-size:10px;color:var(--text-m);font-family:'Courier New',monospace;flex-shrink:0}
+.player .icon-btn{width:30px;height:30px;border-radius:6px;background:var(--elevated);color:var(--text-s);display:flex;align-items:center;justify-content:center;border:none;cursor:pointer;transition:all .15s}
+.player .icon-btn:hover{background:var(--hover);color:var(--text)}
+.player .icon-btn svg{width:13px;height:13px}
+</style>
+</head>
+<body>
+
+<!-- Browser bar -->
+<div class="browser-bar">
+  <div class="dots"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+  <div class="url">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+    <span id="url-bar">localhost:3000/studio</span>
+  </div>
+  <span class="url-label">ThanhVinhStudio</span>
+</div>
+
+<div class="wrap">
+<div class="app">
+
+  <!-- ═══ ICON NAV ═══ -->
+  <nav class="nav">
+    <div class="nav-logo" title="Về trang chủ"><img src="https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg" alt=""></div>
+
+    <button class="nav-btn active" data-page="dashboard" onclick="go('dashboard')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span class="tip">Dashboard</span>
+    </button>
+    <button class="nav-btn" data-page="studio" onclick="go('studio')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21l-1.912-5.813a2 2 0 0 0-1.275-1.275L3 12l5.813-1.912a2 2 0 0 0 1.275-1.275z"/></svg>
+      <span class="tip">Studio</span>
+    </button>
+    <button class="nav-btn" data-page="voices" onclick="go('voices')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+      <span class="tip">Voice Library</span>
+    </button>
+    <button class="nav-btn" data-page="history" onclick="go('history')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      <span class="tip">History</span>
+    </button>
+    <div class="nav-divider"></div>
+    <button class="nav-btn" data-page="features" onclick="go('features')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>
+      <span class="tip">Tính năng</span>
+    </button>
+    <button class="nav-btn" data-page="guide" onclick="go('guide')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      <span class="tip">Hướng dẫn</span>
+    </button>
+    <div class="nav-spacer"></div>
+    <button class="nav-btn" data-page="settings" onclick="go('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      <span class="tip">Settings</span>
+    </button>
+  </nav>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <!-- Topbar -->
+    <header class="topbar">
+      <span class="topbar-title" id="t-title">Dashboard</span>
+      <span class="topbar-crumb" id="t-crumb">/ Tổng quan</span>
+      <div class="topbar-spacer"></div>
+      <div class="topbar-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="Tìm kiếm...">
+      </div>
+      <button class="topbar-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></button>
+    </header>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- ═══ DASHBOARD ═══ -->
+      <div class="page active" id="pg-dashboard">
+        <div class="dash-greet"><h1>Xin chào</h1><p>Tổng quan hoạt động</p></div>
+        <div class="dash-stats">
+          <div class="panel d-stat"><div class="d-stat-icon" style="background:var(--accent-f);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><div><div class="d-stat-val">156</div><div class="d-stat-label">Audio đã tạo</div></div></div>
+          <div class="panel d-stat"><div class="d-stat-icon" style="background:rgba(16,185,129,.1);color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div><div><div class="d-stat-val">4.2h</div><div class="d-stat-label">Tổng thời lượng</div></div></div>
+          <div class="panel d-stat"><div class="d-stat-icon" style="background:var(--purple-f);color:var(--purple)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div><div><div class="d-stat-val">8</div><div class="d-stat-label">Giọng nói</div></div></div>
+          <div class="panel d-stat"><div class="d-stat-icon" style="background:var(--info-f);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><div><div class="d-stat-val">GGUF</div><div class="d-stat-label">Model hiện tại</div></div></div>
+        </div>
+        <div class="dash-grid">
+          <div class="dash-col">
+            <div class="panel panel-p">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21"/></svg> Tạo nhanh</div>
+              <div class="quick-input"><input type="text" placeholder="Nhập văn bản cần đọc..."><button class="btn-sm" onclick="go('studio')">Tạo</button></div>
+              <div class="recent-item" onclick="go('history')"><div class="recent-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></div><span class="recent-name">thanhvinh_1716234.wav</span><span class="recent-size">245 KB</span><span class="recent-time">2 phút trước</span></div>
+              <div class="recent-item" onclick="go('history')"><div class="recent-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></div><span class="recent-name">clone_sample.wav</span><span class="recent-size">512 KB</span><span class="recent-time">15 phút trước</span></div>
+              <div class="recent-item" onclick="go('history')"><div class="recent-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></div><span class="recent-name">dialogue_training.wav</span><span class="recent-size">1.2 MB</span><span class="recent-time">1 giờ trước</span></div>
+            </div>
+            <div class="panel panel-p">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> Phân loại audio</div>
+              <div class="breakdown">
+                <div class="bk-item"><div class="bk-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/></svg></div><div class="bk-val">120</div><div class="bk-label">Preset</div><div class="bk-bar"><div class="bk-bar-fill" style="width:77%"></div></div></div>
+                <div class="bk-item"><div class="bk-icon" style="background:rgba(59,130,246,.1);color:#3b82f6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg></div><div class="bk-val">24</div><div class="bk-label">Clone</div><div class="bk-bar"><div class="bk-bar-fill" style="width:15%;background:#3b82f6"></div></div></div>
+                <div class="bk-item"><div class="bk-icon" style="background:var(--purple-f);color:var(--purple)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div><div class="bk-val">12</div><div class="bk-label">Dialogue</div><div class="bk-bar"><div class="bk-bar-fill" style="width:8%;background:var(--purple)"></div></div></div>
+              </div>
+            </div>
+          </div>
+          <div class="dash-col">
+            <div class="panel panel-p">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10"/></svg> Truy cập nhanh</div>
+              <div class="actions-grid">
+                <div class="action-btn" onclick="go('studio')"><div class="action-icon" style="background:var(--accent-f);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12"/></svg></div><div><div class="action-label">Studio</div><div class="action-desc">Tạo audio</div></div><div class="action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg></div></div>
+                <div class="action-btn" onclick="go('voices')"><div class="action-icon" style="background:var(--purple-f);color:var(--purple)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg></div><div><div class="action-label">Voices</div><div class="action-desc">Quản lý giọng</div></div><div class="action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg></div></div>
+                <div class="action-btn" onclick="go('history')"><div class="action-icon" style="background:rgba(16,185,129,.1);color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div><div><div class="action-label">History</div><div class="action-desc">Lịch sử</div></div><div class="action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg></div></div>
+                <div class="action-btn" onclick="go('settings')"><div class="action-icon" style="background:var(--info-f);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06"/></svg></div><div><div class="action-label">Settings</div><div class="action-desc">Cài đặt</div></div><div class="action-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9,18 15,12 9,6"/></svg></div></div>
+              </div>
+            </div>
+            <div class="panel panel-p">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> LoRA Active</div>
+              <div class="lora-item"><div class="lora-dot" style="background:var(--accent)"></div><div class="lora-info"><div class="lora-name">emotion-v1</div><div class="lora-src">HuggingFace</div></div><span class="badge-active">Active</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ STUDIO ═══ -->
+      <div class="page" id="pg-studio">
+        <div class="studio-wrap">
+          <div class="studio-sidebar">
+            <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4"/></svg> Cài đặt nhanh</div>
+            <select class="sel"><option>GGUF (CPU)</option><option>PyTorch</option><option>Turbo</option></select>
+            <select class="sel"><option>default — Giọng mặc định</option><option>Vinh</option><option>Binh</option></select>
+            <div class="chip-row"><span class="chip on">natural</span><span class="chip">happy</span><span class="chip">sad</span><span class="chip">angry</span></div>
+            <div class="range-row"><label>Silence</label><input type="range" min="0" max="1" step="0.05" value="0.15"><span class="val">0.15</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:11px;color:var(--text-s)">Stream mode</span><div class="toggle"></div></div>
+            <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:4px">
+              <div class="panel-title" style="margin-bottom:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> LoRA</div>
+              <div class="lora-item"><div class="lora-dot" style="background:var(--accent)"></div><div class="lora-info"><div class="lora-name">emotion-v1</div><div class="lora-src">HuggingFace</div></div><span class="badge-active">Active</span></div>
+              <div class="lora-item" style="margin-top:6px;opacity:.5"><div class="lora-dot" style="background:var(--text-m)"></div><div class="lora-info"><div class="lora-name">style-v2</div><div class="lora-src">Local</div></div></div>
+            </div>
+          </div>
+          <div class="studio-content">
+            <div class="mode-tabs">
+              <button class="mode-tab active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/></svg> Giọng có sẵn</button>
+              <button class="mode-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg> Clone</button>
+              <button class="mode-tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Đối thoại</button>
+            </div>
+            <div class="studio-body">
+              <div style="display:flex;align-items:center;justify-content:space-between"><h2>Nhập văn bản</h2><span style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-m)">VIETNAMESE</span></div>
+              <div class="pause-bar"><span class="label">Chèn dừng:</span><button class="pause-btn">250ms</button><button class="pause-btn">500ms</button><button class="pause-btn">1s</button><button class="pause-btn">2s</button></div>
+              <textarea class="ta" placeholder="Nhập văn bản cần đọc...">Xin chào, đây là Thành Vinh Studio, ứng dụng tổng hợp giọng nói tiếng Việt tiên tiến nhất.</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ VOICE LIBRARY ═══ -->
+      <div class="page" id="pg-voices">
+        <h2 style="font-family:'Outfit';font-size:20px;font-weight:700;margin-bottom:2px">Voice Library</h2>
+        <p style="font-size:12px;color:var(--text-s);margin-bottom:16px">Quản lý tất cả giọng nói có sẵn</p>
+        <div class="voice-grid">
+          <div class="panel voice-card selected"><div class="voice-avatar">V</div><h3>Vinh</h3><div class="desc">Giọng nam miền Bắc, trầm ấm</div><div class="voice-tags"><span class="voice-tag gold">Đang chọn</span><span class="voice-tag">nam</span><span class="voice-tag">Bắc</span></div></div>
+          <div class="panel voice-card"><div class="voice-avatar">B</div><h3>Binh</h3><div class="desc">Giọng nam miền Trung, rõ ràng</div><div class="voice-tags"><span class="voice-tag">nam</span><span class="voice-tag">Trung</span></div></div>
+          <div class="panel voice-card"><div class="voice-avatar">L</div><h3>Linh</h3><div class="desc">Giọng nữ miền Nam, nhẹ nhàng</div><div class="voice-tags"><span class="voice-tag">nữ</span><span class="voice-tag">Nam</span></div></div>
+          <div class="panel voice-card"><div class="voice-avatar">H</div><h3>Hà</h3><div class="desc">Giọng nữ miền Bắc, truyền cảm</div><div class="voice-tags"><span class="voice-tag">nữ</span><span class="voice-tag">Bắc</span></div></div>
+          <div class="panel voice-card"><div class="voice-avatar">T</div><h3>Tuấn</h3><div class="desc">Giọng nam miền Nam, mạnh mẽ</div><div class="voice-tags"><span class="voice-tag">nam</span><span class="voice-tag">Nam</span></div></div>
+          <div class="panel voice-card"><div class="voice-avatar">M</div><h3>Minh</h3><div class="desc">Giọng nam trung tính, chuyên nghiệp</div><div class="voice-tags"><span class="voice-tag gold">popular</span><span class="voice-tag">nam</span></div></div>
+        </div>
+      </div>
+
+      <!-- ═══ HISTORY ═══ -->
+      <div class="page" id="pg-history">
+        <h2 style="font-family:'Outfit';font-size:20px;font-weight:700;margin-bottom:2px">Lịch sử Audio</h2>
+        <p style="font-size:12px;color:var(--text-s);margin-bottom:16px">156 file đã tạo</p>
+        <div class="panel" style="padding:0;overflow:hidden">
+          <table class="hist-table">
+            <thead><tr><th></th><th>Tên file</th><th>Loại</th><th>Kích thước</th><th>Thời gian</th></tr></thead>
+            <tbody>
+              <tr><td><button class="hist-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></button></td><td>thanhvinh_1716234.wav</td><td><span class="badge badge-preset">Preset</span></td><td style="font-family:monospace">245 KB</td><td style="color:var(--text-m)">2 phút trước</td></tr>
+              <tr><td><button class="hist-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></button></td><td>clone_sample.wav</td><td><span class="badge badge-clone">Clone</span></td><td style="font-family:monospace">512 KB</td><td style="color:var(--text-m)">15 phút trước</td></tr>
+              <tr><td><button class="hist-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></button></td><td>dialogue_training.wav</td><td><span class="badge badge-dialogue">Dialogue</span></td><td style="font-family:monospace">1.2 MB</td><td style="color:var(--text-m)">1 giờ trước</td></tr>
+              <tr><td><button class="hist-play"><svg viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></button></td><td>announcement_v2.wav</td><td><span class="badge badge-preset">Preset</span></td><td style="font-family:monospace">380 KB</td><td style="color:var(--text-m)">3 giờ trước</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ═══ SETTINGS ═══ -->
+      <div class="page" id="pg-settings">
+        <h2 style="font-family:'Outfit';font-size:20px;font-weight:700;margin-bottom:16px">Settings</h2>
+        <div class="sett-grid">
+          <div class="sett-nav">
+            <button class="sett-nav-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Model</button>
+            <button class="sett-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06"/></svg> General</button>
+            <button class="sett-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Export</button>
+            <button class="sett-nav-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> About</button>
+          </div>
+          <div>
+            <div class="panel panel-p" style="margin-bottom:12px">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Model Engine</div>
+              <div class="sett-row"><div><div class="sett-label">Engine hiện tại</div><div class="sett-desc">GGUF — tối ưu cho CPU, chất lượng tốt</div></div><span class="badge badge-preset">GGUF</span></div>
+              <div class="sett-row"><div><div class="sett-label">Hardware Detection</div><div class="sett-desc">Phát hiện GPU và đề xuất engine</div></div><button class="btn-sm">Detect</button></div>
+              <div class="sett-row"><div><div class="sett-label">Base Model</div><div class="sett-desc">VieNeu-TTS-v2 · Đã tải · 300MB</div></div><button class="btn-ghost">Tải lại</button></div>
+            </div>
+            <div class="panel panel-p">
+              <div class="panel-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg> Thông tin</div>
+              <div class="sett-row"><div class="sett-label">Version</div><span style="font-size:12px">ThanhVinhStudio v2.0</span></div>
+              <div class="sett-row"><div class="sett-label">Backend</div><span style="font-size:12px;color:var(--text-s)">FastAPI · localhost:8000</span></div>
+              <div class="sett-row"><div class="sett-label">Frontend</div><span style="font-size:12px;color:var(--text-s)">Next.js Static Export</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══ FEATURES ═══ -->
+      <div class="page" id="pg-features">
+        <div class="feat-head"><div class="eyebrow">Chức năng</div><h1>Thành Vinh Studio</h1><p>Các chức năng chính: preset voices, voice clone, dialogue, history, model controls.</p></div>
+        <div class="feat-grid">
+          <div class="panel feat-card"><div class="feat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg></div><h3>Preset Voices</h3><div class="tagline">Chọn giọng có sẵn</div><ul><li>Lấy giọng từ thư viện model</li><li>Điều chỉnh cảm xúc và tốc độ</li><li>Phù hợp TTS thông thường</li></ul></div>
+          <div class="panel feat-card"><div class="feat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></div><h3>Voice Clone</h3><div class="tagline">Upload audio tham chiếu</div><ul><li>Dùng file mẫu 3-10 giây</li><li>Nhập transcript chính xác</li><li>Lưu ref để tái sử dụng</li></ul></div>
+          <div class="panel feat-card"><div class="feat-card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div><h3>Dialogue</h3><div class="tagline">Nhiều giọng trong kịch bản</div><ul><li>Mỗi dòng một voice riêng</li><li>Pause sau từng line</li><li>Thích hợp kịch bản hội thoại</li></ul></div>
+        </div>
+        <div class="feat-grid" style="grid-template-columns:1fr 1fr">
+          <div class="panel feat-card"><div class="feat-card-icon" style="background:rgba(16,185,129,.1);color:#10b981"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div><h3>Lịch sử & Streaming</h3><div class="tagline">Quản lý audio & phát realtime</div><ul><li>Lưu và phát lại mọi file đã tạo</li><li>Streaming playback nhanh</li></ul></div>
+          <div class="panel feat-card"><div class="feat-card-icon" style="background:var(--info-f);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div><h3>Model Controls</h3><div class="tagline">CPU/GPU/Turbo & LoRA</div><ul><li>Chuyển đổi engine linh hoạt</li><li>Self-hosted, dữ liệu nội bộ</li></ul></div>
+        </div>
+      </div>
+
+      <!-- ═══ GUIDE ═══ -->
+      <div class="page" id="pg-guide">
+        <h2 style="font-family:'Outfit';font-size:20px;font-weight:700;margin-bottom:2px">Hướng dẫn sử dụng</h2>
+        <p style="font-size:12px;color:var(--text-s);margin-bottom:20px">Cách dùng app: nhập text, chọn chế độ, sinh audio.</p>
+        <div class="guide-grid">
+          <div class="guide-toc"><div class="guide-toc-title">Mục lục</div>
+            <nav>
+              <a href="#" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/></svg> Tổng quan</a>
+              <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/></svg> Preset</a>
+              <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17,8 12,3 7,8"/></svg> Clone</a>
+              <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Dialogue</a>
+              <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4"/></svg> Điều khiển</a>
+              <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg> History</a>
+            </nav>
+          </div>
+          <div>
+            <div class="guide-section"><h2>Tổng quan</h2><p>Thành Vinh Studio hỗ trợ ba luồng chính: chọn preset voice, clone từ audio mẫu và dựng dialogue nhiều dòng.</p></div>
+            <div class="guide-section" style="margin-top:20px"><h2>Preset voices</h2><p>Dùng khi bạn muốn tạo audio nhanh từ model sẵn có. Chỉ cần nhập text, chọn model voice và tinh chỉnh.</p><div class="guide-callout callout-info">Chọn voice preset → nhập text → bấm Tạo giọng → nghe bằng player.</div></div>
+            <div class="guide-section" style="margin-top:20px"><h2>Voice Clone</h2><p>Upload file audio mẫu 3-10 giây, nhập transcript đúng với file.</p><div class="guide-callout callout-warn">Nếu ref_text sai, kết quả clone sẽ lệch rõ rệt.</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Player bar -->
+      <div class="player">
+        <button class="gen-btn"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 3l1.912 5.813a2 2 0 0 0 1.275 1.275L21 12l-5.813 1.912a2 2 0 0 0-1.275 1.275L12 21"/></svg> Tạo giọng</button>
+        <div class="ctrl">
+          <button class="play" id="play-btn" onclick="togglePlay()"><svg id="play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></button>
+          <div class="wave playing" id="player-wave"><span style="height:8px" class="on"></span><span style="height:14px" class="on"></span><span style="height:10px" class="on"></span><span style="height:18px" class="on"></span><span style="height:12px" class="on"></span><span style="height:20px" class="on"></span><span style="height:15px" class="on"></span><span style="height:22px" class="on"></span><span style="height:10px" class="on"></span><span style="height:16px" class="on"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:10px"></span><span style="height:18px"></span><span style="height:12px"></span><span style="height:20px"></span><span style="height:15px"></span><span style="height:22px"></span><span style="height:10px"></span><span style="height:16px"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:10px"></span><span style="height:18px"></span><span style="height:12px"></span><span style="height:20px"></span><span style="height:15px"></span><span style="height:22px"></span><span style="height:10px"></span><span style="height:16px"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:10px"></span><span style="height:18px"></span><span style="height:12px"></span><span style="height:20px"></span><span style="height:15px"></span><span style="height:22px"></span><span style="height:10px"></span><span style="height:16px"></span><span style="height:8px"></span><span style="height:14px"></span><span style="height:10px"></span><span style="height:18px"></span></div>
+          <span class="time">0:12 / 0:34</span>
+        </div>
+        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg></button>
+        <button class="icon-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+const META = {
+  dashboard: { title:'Dashboard', crumb:'/ Tổng quan', url:'localhost:3000/studio' },
+  studio:    { title:'Studio',    crumb:'/ Tạo giọng nói', url:'localhost:3000/studio?tab=studio' },
+  voices:    { title:'Voice Library', crumb:'/ Quản lý giọng', url:'localhost:3000/studio?tab=voices' },
+  history:   { title:'History',   crumb:'/ Lịch sử audio', url:'localhost:3000/studio?tab=history' },
+  settings:  { title:'Settings',  crumb:'/ Cài đặt', url:'localhost:3000/studio?tab=settings' },
+  features:  { title:'Tính năng', crumb:'/ Features', url:'localhost:3000/studio?tab=features' },
+  guide:     { title:'Hướng dẫn', crumb:'/ Guide', url:'localhost:3000/studio?tab=guide' },
+};
+
+let cur = 'dashboard';
+let playing = true;
+
+function go(page) {
+  // hide old
+  const old = document.getElementById('pg-' + cur);
+  if (old) old.classList.remove('active');
+  // show new
+  const el = document.getElementById('pg-' + page);
+  if (el) el.classList.add('active');
+  // nav highlight
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.querySelector(`.nav-btn[data-page="${page}"]`);
+  if (btn) btn.classList.add('active');
+  // topbar
+  const m = META[page];
+  if (m) {
+    document.getElementById('t-title').textContent = m.title;
+    document.getElementById('t-crumb').textContent = m.crumb;
+    document.getElementById('url-bar').textContent = m.url;
+  }
+  cur = page;
+}
+
+function togglePlay() {
+  playing = !playing;
+  const wave = document.getElementById('player-wave');
+  const icon = document.getElementById('play-icon');
+  const btn = document.getElementById('play-btn');
+  if (playing) {
+    wave.classList.add('playing');
+    icon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+    btn.style.background = 'var(--accent)';
+    btn.style.color = '#000';
+  } else {
+    wave.classList.remove('playing');
+    icon.innerHTML = '<polygon points="5,3 19,12 5,21"/>';
+    btn.style.background = '';
+    btn.style.color = '';
+  }
+}
+</script>
+</body>
+</html>

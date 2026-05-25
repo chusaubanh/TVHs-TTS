@@ -1,0 +1,180 @@
+"use client";
+
+import { useRef, useEffect, useState } from "react";
+import { Play, Pause, Download, SkipBack, Sparkles } from "lucide-react";
+
+interface Props {
+  audioUrl: string | null;
+  isPlaying: boolean;
+  loading: boolean;
+  onPlayPause: () => void;
+  onRestart: () => void;
+  onDownload: () => void;
+  onGenerate: () => void;
+}
+
+function formatTime(seconds: number) {
+  if (!isFinite(seconds) || seconds < 0) return "0:00";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, onDownload, onGenerate }: Props) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+
+  // Sync external audioUrl to audio element and auto-play
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !audioUrl) return;
+    audio.src = audioUrl;
+    audio.load();
+    audio.oncanplay = () => {
+      if (isFinite(audio.duration)) setDuration(audio.duration);
+      audio.play().catch(() => {});
+    };
+  }, [audioUrl]);
+
+  // Use timeupdate event instead of RAF for efficiency
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoadedMetadata = () => {
+      if (isFinite(audio.duration)) setDuration(audio.duration);
+    };
+    const onEnded = () => { setCurrentTime(0); };
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("ended", onEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, []);
+
+  // Sync external isPlaying state (for streaming playback)
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (isPlaying && audio.paused && audioUrl && audio.readyState >= 2) {
+      audio.play().catch(() => {});
+    } else if (!isPlaying && !audio.paused) {
+      audio.pause();
+    }
+  }, [isPlaying, audioUrl]);
+
+  const playerProgress = audioUrl && duration > 0
+    ? Math.min(100, Math.max(0, (currentTime / duration) * 100))
+    : 0;
+
+  return (
+    <div className="p-4" style={{ background: "var(--color-tvhs-surface)", borderTop: "1px solid var(--color-tvhs-border)" }}>
+      <div className="studio-panel relative overflow-hidden p-3">
+        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+          <button
+            onClick={onGenerate}
+            disabled={loading}
+            className="btn-primary shrink-0 px-5 py-3 text-sm"
+          >
+            {loading ? (
+              <>
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+                <span>Đang tạo...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="h-4 w-4" />
+                <span>Tạo giọng</span>
+              </>
+            )}
+          </button>
+
+          <div className="flex flex-1 items-center gap-3 rounded-xl border border-tvhs-border bg-tvhs-main p-2.5">
+            <button
+              onClick={onPlayPause}
+              disabled={!audioUrl}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-tvhs-accent-faint text-tvhs-accent transition hover:bg-tvhs-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
+              title={isPlaying ? "Tạm dừng" : "Phát"}
+            >
+              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
+            </button>
+
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-center justify-between gap-3 text-[10px] text-tvhs-text-muted">
+                <span className="truncate font-medium">
+                  {loading ? "Đang tổng hợp..." : isPlaying ? "Đang phát..." : audioUrl ? "Sẵn sàng phát audio" : "Chưa có audio"}
+                </span>
+                <span className="shrink-0 font-mono tabular-nums">
+                  {formatTime(currentTime)} / {formatTime(duration)}
+                </span>
+              </div>
+
+              <div className="relative">
+                <div className={`pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-[1.5px] px-1${isPlaying ? " animate-wave" : ""}`}>
+                  {Array.from({ length: 44 }).map((_, index) => {
+                    const height = 8 + ((index * 7) % 20);
+                    const active = audioUrl && index <= Math.round((playerProgress / 100) * 43);
+                    return (
+                      <span
+                        key={index}
+                        className={`block w-[3px] rounded-full transition-all duration-200${active && isPlaying ? " animate-bar" : ""}`}
+                        style={{
+                          height: `${height}px`,
+                          background: active ? "linear-gradient(to top, rgba(197,160,89,0.4), #c5a059)" : "rgba(197, 160, 89, 0.12)",
+                          boxShadow: active ? "0 0 6px rgba(197,160,89,0.2)" : "none",
+                          animationDelay: active && isPlaying ? `${(index % 5) * 0.1}s` : "0s",
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max={duration || 100}
+                  step="0.01"
+                  value={currentTime}
+                  onChange={(e) => {
+                    const time = parseFloat(e.target.value);
+                    if (audioRef.current) audioRef.current.currentTime = time;
+                    setCurrentTime(time);
+                  }}
+                  disabled={!audioUrl}
+                  className="tts-range tvhs-wave-range relative z-10 h-9 opacity-0"
+                  aria-label="Tua audio"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                onClick={onRestart}
+                disabled={!audioUrl}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-tvhs-elevated text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text disabled:cursor-not-allowed disabled:opacity-40"
+                title="Phát lại từ đầu"
+              >
+                <SkipBack className="h-4 w-4" />
+              </button>
+              <button
+                onClick={onDownload}
+                disabled={!audioUrl}
+                className="flex h-9 w-9 items-center justify-center rounded-lg bg-tvhs-elevated text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text disabled:cursor-not-allowed disabled:opacity-40"
+                title="Tải về"
+              >
+                <Download className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+        <audio ref={audioRef} className="hidden" />
+      </div>
+    </div>
+  );
+}

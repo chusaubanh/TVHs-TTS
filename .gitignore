@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.spec
+.venv/
+venv/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.d.ts
+
+# Models & outputs (large files)
+models/
+outputs/
+*.gguf
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Env
+.env*
+!.env.example
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Build
+*.exe
+*.msi
+*.whl
+installer.nsi
+
+# Logs
+*.log
+npm-debug.log*
