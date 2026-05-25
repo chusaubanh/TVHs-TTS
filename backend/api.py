@@ -29,7 +29,12 @@ except ImportError:
 tts = None
 _tts_lock = threading.Lock()
 current_lora = None
-current_model_type = "gguf"  # "gguf", "pytorch", "turbo", "omnivoice"
+current_model_type = "gguf"  # "gguf", "pytorch", "turbo"
+
+# OmniVoice separate state
+omnivoice_tts = None
+_omnivoice_lock = threading.Lock()
+omnivoice_loaded = False
 
 # Download progress tracking
 download_progress = {
@@ -43,7 +48,7 @@ download_progress = {
 # ============================================================================
 
 class SwitchModelRequest(BaseModel):
-    type: str = Field(..., pattern="^(gguf|pytorch|turbo|omnivoice)$")
+    type: str = Field(..., pattern="^(gguf|pytorch|turbo)$")
 
 
 class DownloadLoraRequest(BaseModel):
@@ -348,10 +353,7 @@ async def detect_hardware():
             pass
 
     # Recommendation
-    if has_cuda and info.get("vram_gb", 0) >= 6:
-        recommendation = "omnivoice"
-        reason = f"GPU {info['gpu_name']} ({info['vram_gb']}GB VRAM) - OmniVoice 0.6B, 600+ ngôn ngữ, chất lượng cao"
-    elif has_cuda and info.get("vram_gb", 0) >= 4:
+    if has_cuda and info.get("vram_gb", 0) >= 4:
         recommendation = "pytorch"
         reason = f"GPU {info['gpu_name']} ({info['vram_gb']}GB VRAM) - PyTorch cho chất lượng tốt nhất + hỗ trợ LoRA"
     elif info.get("ram_gb", 0) >= 8:
@@ -392,13 +394,6 @@ async def list_available_models():
                 "description": "Model nhẹ 0.1B, nhanh nhất",
                 "supports_lora": False,
                 "requires_gpu": False,
-            },
-            {
-                "id": "omnivoice",
-                "name": "OmniVoice (GPU)",
-                "description": "0.6B, 600+ ngôn ngữ, voice cloning",
-                "supports_lora": False,
-                "requires_gpu": True,
             },
         ],
         "current": current_model_type,
@@ -450,14 +445,6 @@ async def switch_model(body: SwitchModelRequest):
                     backbone_device="cpu",
                     codec_device="cpu",
                 )
-            elif model_type == "omnivoice":
-                try:
-                    from omnivoice import OmniVoice as OmniVoiceModel
-                except ImportError:
-                    raise HTTPException(status_code=400, detail="OmniVoice not installed. Run: pip install omnivoice")
-                _device = "cuda:0" if _has_cuda() else "cpu"
-                _dtype = "float16" if _has_cuda() else "float32"
-                tts = OmniVoiceModel.from_pretrained("k2-fsa/OmniVoice", device_map=_device, dtype=_dtype)
 
             current_model_type = model_type
             return {"status": "ok", "model": model_type}
@@ -926,6 +913,169 @@ async def delete_audio_file(filename: str):
         raise HTTPException(status_code=404, detail="File not found")
     filepath.unlink()
     return {"status": "ok", "message": f"Deleted {filename}"}
+
+
+# ============================================================================
+# OmniVoice — Separate TTS Engine
+# ============================================================================
+
+class OmniVoiceTTSRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    language: str = Field(default="vie", description="Language code (ISO 639-3)")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0)
+
+
+class OmniVoiceCloneRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    language: str = Field(default="vie")
+    speed: float = Field(default=1.0, ge=0.5, le=2.0)
+
+
+@app.post("/v1/omnivoice/load")
+async def load_omnivoice():
+    """Load OmniVoice model."""
+    global omnivoice_tts, omnivoice_loaded
+
+    if omnivoice_loaded and omnivoice_tts is not None:
+        return {"status": "already_loaded"}
+
+    with _omnivoice_lock:
+        try:
+            from omnivoice import OmniVoice as OmniVoiceModel
+        except ImportError:
+            raise HTTPException(status_code=400, detail="OmniVoice not installed. Run: pip install omnivoice")
+
+        try:
+            _device = "cuda:0" if _has_cuda() else "cpu"
+            _dtype = "float16" if _has_cuda() else "float32"
+            omnivoice_tts = OmniVoiceModel.from_pretrained("k2-fsa/OmniVoice", device_map=_device, dtype=_dtype)
+            omnivoice_loaded = True
+            return {"status": "ok", "device": _device}
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to load OmniVoice: {str(e)}")
+
+
+@app.post("/v1/omnivoice/unload")
+async def unload_omnivoice():
+    """Unload OmniVoice model to free memory."""
+    global omnivoice_tts, omnivoice_loaded
+
+    with _omnivoice_lock:
+        if omnivoice_tts is not None:
+            try:
+                del omnivoice_tts
+            except Exception:
+                pass
+        omnivoice_tts = None
+        omnivoice_loaded = False
+
+    if _has_cuda():
+        try:
+            import torch
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+
+    return {"status": "ok"}
+
+
+@app.get("/v1/omnivoice/status")
+async def omnivoice_status():
+    """Check OmniVoice model status."""
+    return {
+        "loaded": omnivoice_loaded,
+        "has_cuda": _has_cuda(),
+    }
+
+
+@app.post("/v1/omnivoice/tts")
+async def omnivoice_tts_generate(request: OmniVoiceTTSRequest):
+    """Generate speech with OmniVoice."""
+    if not omnivoice_loaded or omnivoice_tts is None:
+        raise HTTPException(status_code=503, detail="OmniVoice not loaded. Call /v1/omnivoice/load first.")
+
+    try:
+        with _omnivoice_lock:
+            audio_data = omnivoice_tts.generate(
+                text=request.text,
+                language=request.language,
+                speed=request.speed,
+            )
+
+        if isinstance(audio_data, tuple):
+            audio_data, sample_rate = audio_data
+        else:
+            sample_rate = getattr(omnivoice_tts, 'sample_rate', 24000)
+
+        if audio_data.dtype != np.float32:
+            audio_data = audio_data.astype(np.float32)
+        if np.abs(audio_data).max() > 1.0:
+            audio_data = audio_data / np.abs(audio_data).max()
+
+        # Save to disk
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"omnivoice_{timestamp}.wav"
+        filepath = OUTPUTS_DIR / filename
+        sf.write(str(filepath), audio_data, sample_rate, format='WAV')
+
+        buffer = io.BytesIO()
+        sf.write(buffer, audio_data, sample_rate, format='WAV')
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="audio/wav")
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/v1/omnivoice/clone")
+async def omnivoice_clone(
+    text: str = Form(...),
+    reference_audio: UploadFile = File(...),
+    language: str = Form(default="vie"),
+    speed: float = Form(default=1.0),
+):
+    """Voice clone with OmniVoice."""
+    if not omnivoice_loaded or omnivoice_tts is None:
+        raise HTTPException(status_code=503, detail="OmniVoice not loaded. Call /v1/omnivoice/load first.")
+
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+            shutil.copyfileobj(reference_audio.file, tmp)
+            tmp_path = tmp.name
+
+        with _omnivoice_lock:
+            audio_data = omnivoice_tts.clone(
+                text=text,
+                reference_audio=tmp_path,
+                language=language,
+                speed=speed,
+            )
+        os.remove(tmp_path)
+
+        if isinstance(audio_data, tuple):
+            audio_data, sample_rate = audio_data
+        else:
+            sample_rate = getattr(omnivoice_tts, 'sample_rate', 24000)
+
+        if audio_data.dtype != np.float32:
+            audio_data = audio_data.astype(np.float32)
+        if np.abs(audio_data).max() > 1.0:
+            audio_data = audio_data / np.abs(audio_data).max()
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"omnivoice_clone_{timestamp}.wav"
+        filepath = OUTPUTS_DIR / filename
+        sf.write(str(filepath), audio_data, sample_rate, format='WAV')
+
+        buffer = io.BytesIO()
+        sf.write(buffer, audio_data, sample_rate, format='WAV')
+        buffer.seek(0)
+        return StreamingResponse(buffer, media_type="audio/wav")
+
+    except Exception as e:
+        if 'tmp_path' in dir() and os.path.exists(tmp_path):
+            os.remove(tmp_path)
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # ============================================================================

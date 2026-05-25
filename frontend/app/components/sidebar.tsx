@@ -144,12 +144,11 @@ export function Sidebar(props: Props) {
         {/* Model Selector */}
         <div className="rounded-lg p-2.5" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
           <h3 className="mb-2 text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Model</h3>
-          <div className="grid grid-cols-2 gap-1">
+          <div className="grid grid-cols-3 gap-1">
             {[
               { id: "gguf", name: "CPU", desc: "GGUF Q4" },
               { id: "pytorch", name: "GPU", desc: "PyTorch" },
               { id: "turbo", name: "Turbo", desc: "0.1B" },
-              { id: "omnivoice", name: "OmniVoice", desc: "0.6B" },
             ].map((m) => (
               <button
                 key={m.id}
@@ -197,13 +196,13 @@ export function Sidebar(props: Props) {
                 <div className="flex items-center gap-1.5">
                   <Zap className="h-3 w-3 text-tvhs-success" />
                   <span className="text-[9px] font-semibold text-tvhs-success">
-                    Khuyến nghị: {hardwareInfo.recommendation === "pytorch" ? "GPU (PyTorch)" : hardwareInfo.recommendation === "gguf" ? "CPU (GGUF)" : hardwareInfo.recommendation === "omnivoice" ? "OmniVoice (GPU)" : "Turbo"}
+                    Khuyến nghị: {hardwareInfo.recommendation === "pytorch" ? "GPU (PyTorch)" : hardwareInfo.recommendation === "gguf" ? "CPU (GGUF)" : "Turbo"}
                   </span>
                 </div>
                 <p className="mt-0.5 text-[8px] text-tvhs-text-muted">{hardwareInfo.reason}</p>
                 {hardwareInfo.recommendation !== currentModel && (
                   <button onClick={() => onSwitchModel(hardwareInfo.recommendation)} className="mt-1.5 w-full rounded-md py-1.5 text-[10px] font-medium transition-all" style={{ background: "var(--color-tvhs-success)", color: "#fff" }}>
-                    Chuyển sang {hardwareInfo.recommendation === "pytorch" ? "GPU" : hardwareInfo.recommendation === "gguf" ? "CPU" : hardwareInfo.recommendation === "omnivoice" ? "OmniVoice" : "Turbo"}
+                    Chuyển sang {hardwareInfo.recommendation === "pytorch" ? "GPU" : hardwareInfo.recommendation === "gguf" ? "CPU" : "Turbo"}
                   </button>
                 )}
               </div>

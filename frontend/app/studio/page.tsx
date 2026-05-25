@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
-import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell, ChevronLeft } from "lucide-react";
+import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell, ChevronLeft, Radio, Upload, Loader2, Play, Square, Zap } from "lucide-react";
 import { showToast, ToastContainer } from "../components/toast";
 import { SetupScreen } from "../components/setup-screen";
 import { Sidebar } from "../components/sidebar";
@@ -27,6 +27,7 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "";
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, breadcrumb: "/ Tổng quan", href: null },
   { id: "studio", label: "Studio", icon: Sparkles, breadcrumb: "/ Tạo giọng nói", href: null },
+  { id: "omnivoice", label: "OmniVoice", icon: Radio, breadcrumb: "/ OmniVoice TTS", href: null },
   { id: "voices", label: "Voice Library", icon: Mic, breadcrumb: "/ Quản lý giọng", href: null },
   { id: "history", label: "History", icon: Clock, breadcrumb: "/ Lịch sử audio", href: null },
   { id: "features", label: "Tính năng", icon: Star, breadcrumb: "/ Features", href: "/features" },
@@ -75,9 +76,20 @@ function HomeContent() {
     { id: 2, text: "Chào bạn, hôm nay bạn khỏe không?", voice: "Binh", pauseAfter: 0.5, emotion: "natural" },
   ]);
 
+  // OmniVoice state
+  const [ovLoaded, setOvLoaded] = useState(false);
+  const [ovLoading, setOvLoading] = useState(false);
+  const [ovText, setOvText] = useState("Xin chào, đây là OmniVoice, engine TTS hỗ trợ hơn 600 ngôn ngữ.");
+  const [ovGenerating, setOvGenerating] = useState(false);
+  const [ovAudioUrl, setOvAudioUrl] = useState<string | null>(null);
+  const [ovMode, setOvMode] = useState<"tts" | "clone">("tts");
+  const [ovRefFile, setOvRefFile] = useState<File | null>(null);
+  const [ovLanguage, setOvLanguage] = useState("vie");
+  const [ovSpeed, setOvSpeed] = useState(1.0);
+
   const [activePage, setActivePage] = useState(() => {
     const tab = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
-    return tab && ["dashboard", "studio", "voices", "history", "settings"].includes(tab) ? tab : "dashboard";
+    return tab && ["dashboard", "studio", "omnivoice", "voices", "history", "settings"].includes(tab) ? tab : "dashboard";
   });
   const [pageVisible, setPageVisible] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -380,6 +392,55 @@ function HomeContent() {
   const updateDialogueLine = (id: number, field: keyof DialogueLine, value: string | number) =>
     setDialogueLines(dialogueLines.map((l) => (l.id === id ? { ...l, [field]: value } : l)));
 
+  // ─── OmniVoice handlers ─────────────────────────────────────
+
+  const handleOvLoad = async () => {
+    setOvLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/v1/omnivoice/load`, { method: "POST" });
+      if (res.ok) { setOvLoaded(true); showToast("success", "OmniVoice đã sẵn sàng!"); }
+      else { const d = await res.json(); showToast("error", d.detail || "Lỗi tải OmniVoice"); }
+    } catch { showToast("error", "Không thể kết nối backend."); }
+    finally { setOvLoading(false); }
+  };
+
+  const handleOvUnload = async () => {
+    try {
+      await fetch(`${API_BASE}/v1/omnivoice/unload`, { method: "POST" });
+      setOvLoaded(false);
+      if (ovAudioUrl) { URL.revokeObjectURL(ovAudioUrl); setOvAudioUrl(null); }
+      showToast("success", "Đã gỡ OmniVoice");
+    } catch { showToast("error", "Lỗi gỡ OmniVoice"); }
+  };
+
+  const handleOvGenerate = async () => {
+    if (!ovText.trim()) { showToast("error", "Vui lòng nhập văn bản"); return; }
+    setOvGenerating(true);
+    try {
+      let response: Response;
+      if (ovMode === "clone") {
+        if (!ovRefFile) { showToast("error", "Vui lòng upload audio tham chiếu"); setOvGenerating(false); return; }
+        const fd = new FormData();
+        fd.append("text", ovText);
+        fd.append("reference_audio", ovRefFile);
+        fd.append("language", ovLanguage);
+        fd.append("speed", String(ovSpeed));
+        response = await fetch(`${API_BASE}/v1/omnivoice/clone`, { method: "POST", body: fd });
+      } else {
+        response = await fetch(`${API_BASE}/v1/omnivoice/tts`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text: ovText, language: ovLanguage, speed: ovSpeed }),
+        });
+      }
+      if (response.ok) {
+        const blob = await response.blob();
+        if (ovAudioUrl) URL.revokeObjectURL(ovAudioUrl);
+        setOvAudioUrl(URL.createObjectURL(blob));
+      } else { const d = await response.json().catch(() => null); showToast("error", d?.detail || "Lỗi tạo âm thanh"); }
+    } catch { showToast("error", "Không thể kết nối backend."); }
+    finally { setOvGenerating(false); }
+  };
+
   // ─── Page navigation with transition ────────────────────────
 
   const navigateTo = useCallback((page: string) => {
@@ -448,7 +509,7 @@ function HomeContent() {
             <img src={LOGO_URL} alt="TVHS" className="h-full w-full object-cover" />
           </a>
 
-          {NAV_ITEMS.slice(0, 4).map((item) => (
+          {NAV_ITEMS.slice(0, 5).map((item) => (
             <button
               key={item.id}
               onClick={() => navigateTo(item.id)}
@@ -462,7 +523,7 @@ function HomeContent() {
 
           <div className="my-1 h-px w-6 bg-tvhs-border" />
 
-          {NAV_ITEMS.slice(4).map((item) => (
+          {NAV_ITEMS.slice(5).map((item) => (
             <a
               key={item.id}
               href={item.href || "#"}
@@ -663,6 +724,98 @@ function HomeContent() {
                 {activePage === "voices" && <VoiceLibrary voices={voices} selectedVoice={selectedVoice} onSelect={setSelectedVoice} />}
                 {activePage === "history" && <History audioHistory={audioHistory} onPlay={playHistoryFile} onDelete={handleDeleteAudio} />}
                 {activePage === "settings" && <SettingsPage status={status} hardwareInfo={hardwareInfo} detecting={detecting} onDetectHardware={handleDetectHardware} onReloadModel={handleReloadModel} />}
+                {activePage === "omnivoice" && (
+                  <div className="mx-auto flex w-full max-w-3xl flex-col gap-5">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h1 className="text-lg font-bold text-tvhs-text">OmniVoice TTS</h1>
+                        <p className="text-sm text-tvhs-text-muted">Engine tổng hợp giọng nói 0.6B, hỗ trợ 600+ ngôn ngữ</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {ovLoaded ? (
+                          <span className="flex items-center gap-1.5 rounded-full bg-tvhs-success/15 px-3 py-1 text-xs font-semibold text-tvhs-success">
+                            <Zap className="h-3 w-3" /> Đã tải
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-tvhs-elevated px-3 py-1 text-xs font-medium text-tvhs-text-muted">Chưa tải</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Load/Unload */}
+                    {!ovLoaded ? (
+                      <button onClick={handleOvLoad} disabled={ovLoading} className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all disabled:opacity-50" style={{ background: "linear-gradient(135deg, #c5a059, #e0c286)", color: "#000" }}>
+                        {ovLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Đang tải model...</> : <><Radio className="h-4 w-4" /> Tải OmniVoice</>}
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button onClick={handleOvUnload} className="rounded-lg px-4 py-2 text-xs font-medium transition-colors" style={{ border: "1px solid var(--color-tvhs-border)", color: "var(--color-tvhs-text-muted)" }}>Gỡ model</button>
+                      </div>
+                    )}
+
+                    {ovLoaded && (
+                      <>
+                        {/* Mode tabs */}
+                        <div className="flex gap-1 rounded-lg p-1" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
+                          {([ { id: "tts" as const, label: "TTS" }, { id: "clone" as const, label: "Voice Clone" } ]).map((tab) => (
+                            <button key={tab.id} onClick={() => setOvMode(tab.id)} className="flex-1 rounded-md px-3 py-2 text-xs font-semibold transition-all" style={{ background: ovMode === tab.id ? "linear-gradient(135deg, #c5a059, #e0c286)" : "transparent", color: ovMode === tab.id ? "#000" : "var(--color-tvhs-text-secondary)" }}>
+                              {tab.label}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Clone: reference audio upload */}
+                        {ovMode === "clone" && (
+                          <div className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl p-6 text-center transition-colors" style={{ border: "2px dashed var(--color-tvhs-border)", background: "var(--color-tvhs-elevated)" }}>
+                            <input type="file" accept="audio/*" className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => setOvRefFile(e.target.files?.[0] || null)} />
+                            <Upload className="h-6 w-6 text-tvhs-text-muted" />
+                            <span className="text-sm font-medium text-tvhs-text-secondary">{ovRefFile ? ovRefFile.name : "Tải lên audio tham chiếu"}</span>
+                            <span className="text-[10px] text-tvhs-text-muted">WAV, MP3 (3-10s)</span>
+                          </div>
+                        )}
+
+                        {/* Controls */}
+                        <div className="flex gap-3">
+                          <div className="flex-1">
+                            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-tvhs-text-muted">Ngôn ngữ</label>
+                            <select value={ovLanguage} onChange={(e) => setOvLanguage(e.target.value)} className="tts-select">
+                              <option value="vie">Tiếng Việt</option>
+                              <option value="eng">English</option>
+                              <option value="cmn">中文</option>
+                              <option value="jpn">日本語</option>
+                              <option value="kor">한국어</option>
+                              <option value="fra">Français</option>
+                              <option value="deu">Deutsch</option>
+                            </select>
+                          </div>
+                          <div className="flex-1">
+                            <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-tvhs-text-muted">Tốc độ: {ovSpeed.toFixed(1)}x</label>
+                            <input type="range" min="0.5" max="2.0" step="0.1" value={ovSpeed} onChange={(e) => setOvSpeed(parseFloat(e.target.value))} className="tts-range" />
+                          </div>
+                        </div>
+
+                        {/* Text input */}
+                        <div>
+                          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-tvhs-text-muted">Văn bản</label>
+                          <textarea className="tts-textarea" rows={5} placeholder="Nhập văn bản cần đọc..." value={ovText} onChange={(e) => setOvText(e.target.value)} />
+                        </div>
+
+                        {/* Generate button */}
+                        <button onClick={handleOvGenerate} disabled={ovGenerating || !ovText.trim()} className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all disabled:opacity-50" style={{ background: "linear-gradient(135deg, #c5a059, #e0c286)", color: "#000" }}>
+                          {ovGenerating ? <><Loader2 className="h-4 w-4 animate-spin" /> Đang tạo...</> : <><Play className="h-4 w-4" /> Tạo giọng nói</>}
+                        </button>
+
+                        {/* Audio player */}
+                        {ovAudioUrl && (
+                          <div className="rounded-xl p-4" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
+                            <audio controls src={ovAudioUrl} className="w-full" />
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
