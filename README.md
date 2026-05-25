@@ -49,7 +49,7 @@
 ### 1. Clone repository
 
 ```bash
-git clone [<repo-url>](https://github.com/chusaubanh/ThanhVinhStudio)
+git clone https://github.com/chusaubanh/ThanhVinhStudio
 cd ThanhVinhStudio
 ```
 
@@ -188,4 +188,4 @@ Private — Không phân phối lại.
 
 ---
 
-**Made with ❤️ by Anh Phương - Thành Vinh Studio Team - Phòng Đào Tạo**
+**Made with ❤️ by Sáu Bảnh - Thành Vinh Studio Team - Phòng Đào Tạo**
