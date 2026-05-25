@@ -1,11 +1,47 @@
 @echo off
-title ThanhVinhStudio Launcher
+title ThanhVinh Studio
 color 0b
 cls
 
 echo ===================================================
 echo     ThanhVinh Studio - v2.0
 echo ===================================================
+echo.
+
+:: Quick prerequisite check
+echo Checking prerequisites...
+set MISSING=0
+
+where uv >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [!] uv not found. Run install.bat first.
+    set MISSING=1
+)
+
+where node >nul 2>nul
+if %errorlevel% neq 0 (
+    echo [!] Node.js not found. Run install.bat first.
+    set MISSING=1
+)
+
+if not exist ".venv" (
+    echo [!] Virtual environment not found. Run install.bat first.
+    set MISSING=1
+)
+
+if not exist "frontend\node_modules" (
+    echo [!] Frontend dependencies not found. Run install.bat first.
+    set MISSING=1
+)
+
+if %MISSING% equ 1 (
+    echo.
+    echo Please run install.bat first to set up all dependencies.
+    pause
+    exit /b 1
+)
+
+echo All prerequisites OK.
 echo.
 
 :: 0. Kill existing processes on port 8000
@@ -44,6 +80,7 @@ if %COUNT% geq %MAX_WAIT% (
     echo Common issues:
     echo   - Missing Python dependencies: run install.bat first
     echo   - Port 8000 already in use
+    echo   - eSpeak NG not installed
     echo.
     pause
     goto :START_FRONTEND
