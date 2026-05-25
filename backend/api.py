@@ -29,7 +29,7 @@ except ImportError:
 tts = None
 _tts_lock = threading.Lock()
 current_lora = None
-current_model_type = "gguf"  # "gguf", "pytorch", "turbo"
+current_model_type = "gguf"  # "gguf", "pytorch", "turbo", "omnivoice"
 
 # Download progress tracking
 download_progress = {
@@ -43,7 +43,7 @@ download_progress = {
 # ============================================================================
 
 class SwitchModelRequest(BaseModel):
-    type: str = Field(..., pattern="^(gguf|pytorch|turbo)$")
+    type: str = Field(..., pattern="^(gguf|pytorch|turbo|omnivoice)$")
 
 
 class DownloadLoraRequest(BaseModel):
@@ -348,7 +348,10 @@ async def detect_hardware():
             pass
 
     # Recommendation
-    if has_cuda and info.get("vram_gb", 0) >= 4:
+    if has_cuda and info.get("vram_gb", 0) >= 6:
+        recommendation = "omnivoice"
+        reason = f"GPU {info['gpu_name']} ({info['vram_gb']}GB VRAM) - OmniVoice 0.6B, 600+ ngôn ngữ, chất lượng cao"
+    elif has_cuda and info.get("vram_gb", 0) >= 4:
         recommendation = "pytorch"
         reason = f"GPU {info['gpu_name']} ({info['vram_gb']}GB VRAM) - PyTorch cho chất lượng tốt nhất + hỗ trợ LoRA"
     elif info.get("ram_gb", 0) >= 8:
@@ -389,6 +392,13 @@ async def list_available_models():
                 "description": "Model nhẹ 0.1B, nhanh nhất",
                 "supports_lora": False,
                 "requires_gpu": False,
+            },
+            {
+                "id": "omnivoice",
+                "name": "OmniVoice (GPU)",
+                "description": "0.6B, 600+ ngôn ngữ, voice cloning",
+                "supports_lora": False,
+                "requires_gpu": True,
             },
         ],
         "current": current_model_type,
@@ -440,6 +450,14 @@ async def switch_model(body: SwitchModelRequest):
                     backbone_device="cpu",
                     codec_device="cpu",
                 )
+            elif model_type == "omnivoice":
+                try:
+                    from omnivoice import OmniVoice as OmniVoiceModel
+                except ImportError:
+                    raise HTTPException(status_code=400, detail="OmniVoice not installed. Run: pip install omnivoice")
+                _device = "cuda:0" if _has_cuda() else "cpu"
+                _dtype = "float16" if _has_cuda() else "float32"
+                tts = OmniVoiceModel.from_pretrained("k2-fsa/OmniVoice", device_map=_device, dtype=_dtype)
 
             current_model_type = model_type
             return {"status": "ok", "model": model_type}

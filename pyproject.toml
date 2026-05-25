@@ -45,6 +45,7 @@ dependencies = [
     "uvicorn>=0.38.0",
     "python-multipart>=0.0.20",
     "pywebview>=5.0",
+    "omnivoice>=0.1.0",
 ]
 
 [project.urls]
