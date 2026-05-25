@@ -39,15 +39,21 @@ if %errorlevel% neq 0 (
     echo    Node.js not found.
     echo    Downloading Node.js LTS installer...
 
-    :: Download Node.js LTS installer
-    powershell -ExecutionPolicy Bypass -c ^
-        "$url = 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi'; " ^
-        "$out = '$env:TEMP\node-install.msi'; " ^
-        "Write-Host '   Downloading Node.js v20.18.0...'; " ^
-        "Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing; " ^
-        "Write-Host '   Installing Node.js (may need admin)...'; " ^
-        "Start-Process msiexec.exe -ArgumentList '/i',$out,'/qn','/norestart' -Wait; " ^
-        "Write-Host '   Node.js installed.'"
+    :: Write PowerShell script to temp file
+    set "PS_SCRIPT=%TEMP%\install_node.ps1"
+    (
+        echo $ProgressPreference = 'SilentlyContinue'
+        echo $url = 'https://nodejs.org/dist/v20.18.0/node-v20.18.0-x64.msi'
+        echo $out = Join-Path $env:TEMP 'node-install.msi'
+        echo Write-Host "   Downloading Node.js v20.18.0..."
+        echo Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing
+        echo Write-Host "   Installing Node.js..."
+        echo Start-Process msiexec.exe -ArgumentList "/i",$out,"/qn","/norestart" -Wait
+        echo Write-Host "   Node.js installed."
+    ) > "%PS_SCRIPT%"
+
+    powershell -ExecutionPolicy Bypass -File "%PS_SCRIPT%"
+    del "%PS_SCRIPT%" >nul 2>nul
 
     if %errorlevel% neq 0 (
         echo [ERROR] Failed to install Node.js automatically.
@@ -76,19 +82,27 @@ if %errorlevel% neq 0 (
     ) else (
         echo    eSpeak NG not found. Downloading installer...
 
-        powershell -ExecutionPolicy Bypass -c ^
-            "$releases = Invoke-RestMethod 'https://api.github.com/repos/espeak-ng/espeak-ng/releases/latest'; " ^
-            "$asset = $releases.assets | Where-Object { $_.name -like '*.msi' } | Select-Object -First 1; " ^
-            "if ($asset) { " ^
-            "  Write-Host '   Downloading' $asset.name '...'; " ^
-            "  Invoke-WebRequest -Uri $asset.browser_download_url -OutFile '$env:TEMP\espeak-ng.msi' -UseBasicParsing; " ^
-            "  Write-Host '   Installing eSpeak NG...'; " ^
-            "  Start-Process msiexec.exe -ArgumentList '/i','$env:TEMP\espeak-ng.msi','/qn','/norestart' -Wait; " ^
-            "  Write-Host '   eSpeak NG installed.' " ^
-            "} else { " ^
-            "  Write-Host '   Could not find installer. Please install manually.' " ^
-            "  exit 1 " ^
-            "}"
+        :: Write PowerShell script to temp file to avoid escaping issues
+        set "PS_SCRIPT=%TEMP%\install_espeak.ps1"
+        (
+            echo $ProgressPreference = 'SilentlyContinue'
+            echo $releases = Invoke-RestMethod 'https://api.github.com/repos/espeak-ng/espeak-ng/releases/latest'
+            echo $asset = $releases.assets ^| Where-Object { $_.name -like '*.msi' } ^| Select-Object -First 1
+            echo if ($asset) {
+            echo   Write-Host "   Downloading $($asset.name)..."
+            echo   $out = Join-Path $env:TEMP 'espeak-ng.msi'
+            echo   Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $out -UseBasicParsing
+            echo   Write-Host "   Installing eSpeak NG..."
+            echo   Start-Process msiexec.exe -ArgumentList "/i",$out,"/qn","/norestart" -Wait
+            echo   Write-Host "   eSpeak NG installed."
+            echo } else {
+            echo   Write-Host "   Could not find installer."
+            echo   exit 1
+            echo }
+        ) > "%PS_SCRIPT%"
+
+        powershell -ExecutionPolicy Bypass -File "%PS_SCRIPT%"
+        del "%PS_SCRIPT%" >nul 2>nul
 
         if %errorlevel% neq 0 (
             echo [WARNING] Could not auto-install eSpeak NG.
