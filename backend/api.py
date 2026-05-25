@@ -1104,14 +1104,30 @@ STATIC_DIR = BUNDLE_DIR / "frontend" / "out"
 if STATIC_DIR.exists():
     from fastapi.staticfiles import StaticFiles
     from starlette.responses import RedirectResponse
+    from starlette.routing import Mount
 
     # Redirect /studio to /studio.html (Next.js static export puts it at root level)
     @app.get("/studio")
     async def studio_redirect():
         return RedirectResponse(url="/studio.html")
 
-    # Mount static files - serves index.html for /, studio.html for /studio.html, etc.
-    app.mount("/", StaticFiles(directory=str(STATIC_DIR), html=True), name="static")
+    # Mount static files at /_next and specific paths only — NOT catch-all "/"
+    # to avoid intercepting /v1/* API routes with 405 errors
+    if (STATIC_DIR / "_next").exists():
+        app.mount("/_next", StaticFiles(directory=str(STATIC_DIR / "_next")), name="static_next")
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        """Serve Next.js static export files. Falls back to index.html for SPA routing."""
+        file_path = STATIC_DIR / full_path
+        if file_path.is_file():
+            return FileResponse(str(file_path))
+        # Try with .html extension (Next.js export pattern)
+        html_path = STATIC_DIR / f"{full_path}.html"
+        if html_path.is_file():
+            return FileResponse(str(html_path))
+        # Fallback to index.html for SPA routing
+        return FileResponse(str(STATIC_DIR / "index.html"))
 
 
 def run_server(host: str = "127.0.0.1", port: int = 8000):
