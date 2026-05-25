@@ -46,38 +46,48 @@
 
 ## Cài đặt nhanh
 
-### 1. Clone repository
+### Prerequisites (cần cài trước)
+
+| Phần mềm | Phiên bản | Bắt buộc? | Tải tại |
+|-----------|-----------|-----------|---------|
+| **Python** | 3.10+ (khuyến nghị 3.12) | Có | https://www.python.org/downloads/ |
+| **Node.js** | 18+ (khuyến nghị 20 LTS) | Có | https://nodejs.org/ |
+| **uv** (Astral) | latest | Có | `powershell -c "irm https://astral.sh/uv/install.ps1 \| iex"` |
+| **eSpeak NG** | latest | Có | https://github.com/espeak-ng/espeak-ng/releases |
+| **NVIDIA Driver** | 570.65+ (CUDA 12.8) | Không (cho GPU) | https://www.nvidia.com/drivers |
+
+> `install.bat` sẽ tự động kiểm tra và cài đặt tất cả prerequisites nếu thiếu. Chỉ cần cài **Python** và **Node.js** trước, sau đó chạy `install.bat`.
+
+### Cách 1: Dùng script tự động (khuyến nghị)
+
+```bash
+git clone https://github.com/chusaubanh/ThanhVinhStudio
+cd ThanhVinhStudio
+install.bat    # Tự động cài uv, Node.js, eSpeak NG, Python & Node dependencies
+start.bat      # Khởi động ứng dụng
+```
+
+### Cách 2: Cài thủ công
 
 ```bash
 git clone https://github.com/chusaubanh/ThanhVinhStudio
 cd ThanhVinhStudio
 ```
 
-### 2. Backend (FastAPI)
-
+**Backend (FastAPI):**
 ```bash
-# Dùng uv (khuyến nghị)
-uv sync
-uv run python app.py
-
-# Hoặc pip
-pip install -r requirements-build.txt
-python app.py
+uv sync                                    # Cài Python dependencies
+uv run python backend/api.py               # Chạy backend tại http://localhost:8000
 ```
 
-Backend chạy tại `http://localhost:8000`.
-
-### 3. Frontend (Next.js)
-
+**Frontend (Next.js):**
 ```bash
 cd frontend
-npm install
-npm run dev
+npm install                                # Cài Node dependencies
+npm run dev                                # Chạy frontend tại http://localhost:3000
 ```
 
-Frontend chạy tại `http://localhost:3000`.
-
-### 4. Build production
+### Build production
 
 ```bash
 cd frontend
