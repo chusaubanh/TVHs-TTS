@@ -16,8 +16,8 @@ from fastapi.responses import StreamingResponse
 
 from backend.config import (
     LOCAL_GGUF_DIR, LOCAL_LORA_DIR, LOCAL_OMNIVOICE_DIR,
-    OUTPUTS_DIR, REMOTE_GGUF_REPO, KNOWN_LORAS,
-    DOWNLOAD_IGNORE_PATTERNS, DEFAULT_SILENCE_P,
+    OUTPUTS_DIR, REMOTE_GGUF_REPO, REMOTE_PYTORCH_REPO, KNOWN_LORAS,
+    GGUF_FILENAME, DOWNLOAD_IGNORE_PATTERNS, DEFAULT_SILENCE_P,
 )
 from backend.state import state
 
@@ -201,6 +201,47 @@ def generate_audio_with_pause(tts_engine, text: str, voice=None, silence_p: floa
             i += 1
 
     return np.concatenate(audio_segments)
+
+
+# ============================================================================
+# Model factory
+# ============================================================================
+
+def create_viener_engine(model_type: str = "gguf"):
+    """Create a Vieneu TTS engine instance for the given model type.
+
+    Args:
+        model_type: One of "gguf", "pytorch", "turbo".
+
+    Returns:
+        Configured Vieneu instance.
+    """
+    from vieneu import Vieneu
+
+    if model_type == "pytorch":
+        return Vieneu(
+            mode="standard",
+            backbone_repo=REMOTE_PYTORCH_REPO,
+            gguf_filename=None,
+            backbone_device="cuda" if has_cuda() else "cpu",
+            codec_device="cpu",
+            emotion="natural",
+        )
+    elif model_type == "turbo":
+        return Vieneu(
+            mode="turbo",
+            backbone_device="cpu",
+            codec_device="cpu",
+        )
+    else:  # gguf (default)
+        return Vieneu(
+            mode="standard",
+            backbone_repo=str(LOCAL_GGUF_DIR),
+            gguf_filename=GGUF_FILENAME,
+            backbone_device="cpu",
+            codec_device="cpu",
+            emotion="natural",
+        )
 
 
 # ============================================================================

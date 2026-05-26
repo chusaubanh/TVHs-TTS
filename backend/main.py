@@ -7,11 +7,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from backend.config import (
-    LOCAL_GGUF_DIR, GGUF_FILENAME, OUTPUTS_DIR,
-    APP_TITLE, APP_VERSION, DEFAULT_HOST, DEFAULT_PORT, ALLOWED_ORIGINS,
+    OUTPUTS_DIR, APP_TITLE, APP_VERSION, DEFAULT_HOST, DEFAULT_PORT, ALLOWED_ORIGINS,
 )
 from backend.state import state
-from backend.helpers import is_base_model_downloaded
+from backend.helpers import is_base_model_downloaded, create_viener_engine
 
 
 @asynccontextmanager
@@ -31,14 +30,7 @@ async def lifespan(app):
     if is_base_model_downloaded():
         try:
             with state.tts_lock:
-                state.tts = Vieneu(
-                    mode="standard",
-                    backbone_repo=str(LOCAL_GGUF_DIR),
-                    gguf_filename=GGUF_FILENAME,
-                    backbone_device="cpu",
-                    codec_device="cpu",
-                    emotion="natural",
-                )
+                state.tts = create_viener_engine("gguf")
             print("[OK] VieNeu-TTS-v2 model loaded from local files.")
             print(f"[OK] Outputs directory: {OUTPUTS_DIR}")
         except Exception as e:

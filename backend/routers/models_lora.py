@@ -3,10 +3,10 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from backend.config import LOCAL_GGUF_DIR, GGUF_FILENAME, REMOTE_PYTORCH_REPO
+from backend.config import LOCAL_GGUF_DIR, REMOTE_PYTORCH_REPO
 from backend.state import state
 from backend.helpers import (
-    is_base_model_downloaded, find_lora_path, has_cuda, build_lora_list,
+    is_base_model_downloaded, find_lora_path, build_lora_list, create_viener_engine,
 )
 from backend.models import SwitchModelRequest, LoadLoraRequest
 
@@ -16,8 +16,6 @@ router = APIRouter()
 @router.post("/v1/models/switch")
 async def switch_model(body: SwitchModelRequest):
     """Switch between model backends."""
-    from vieneu import Vieneu
-
     model_type = body.type
 
     if model_type == state.current_model_type and state.tts is not None:
@@ -33,44 +31,13 @@ async def switch_model(body: SwitchModelRequest):
         state.current_lora = None
 
         try:
-            if model_type == "gguf":
-                state.tts = Vieneu(
-                    mode="standard",
-                    backbone_repo=str(LOCAL_GGUF_DIR),
-                    gguf_filename=GGUF_FILENAME,
-                    backbone_device="cpu",
-                    codec_device="cpu",
-                    emotion="natural",
-                )
-            elif model_type == "pytorch":
-                state.tts = Vieneu(
-                    mode="standard",
-                    backbone_repo="pnnbao-ump/VieNeu-TTS-v2",
-                    gguf_filename=None,
-                    backbone_device="cuda" if has_cuda() else "cpu",
-                    codec_device="cpu",
-                    emotion="natural",
-                )
-            elif model_type == "turbo":
-                state.tts = Vieneu(
-                    mode="turbo",
-                    backbone_device="cpu",
-                    codec_device="cpu",
-                )
-
+            state.tts = create_viener_engine(model_type)
             state.current_model_type = model_type
             return {"status": "ok", "model": model_type}
 
         except Exception as e:
             try:
-                state.tts = Vieneu(
-                    mode="standard",
-                    backbone_repo=str(LOCAL_GGUF_DIR),
-                    gguf_filename=GGUF_FILENAME,
-                    backbone_device="cpu",
-                    codec_device="cpu",
-                    emotion="natural",
-                )
+                state.tts = create_viener_engine("gguf")
                 state.current_model_type = "gguf"
             except Exception:
                 pass
@@ -80,8 +47,6 @@ async def switch_model(body: SwitchModelRequest):
 @router.post("/v1/models/reload")
 async def reload_model():
     """Reload the TTS model (after download completes)."""
-    from vieneu import Vieneu
-
     if not is_base_model_downloaded():
         return JSONResponse(status_code=400, content={"error": "Base model not downloaded yet."})
 
@@ -89,10 +54,7 @@ async def reload_model():
         with state.tts_lock:
             if state.tts and hasattr(state.tts, 'close'):
                 state.tts.close()
-            state.tts = Vieneu(
-                backbone_repo=str(LOCAL_GGUF_DIR),
-                codec_device="cpu",
-            )
+            state.tts = create_viener_engine("gguf")
         return {"status": "ok", "message": "Model reloaded successfully."}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -122,8 +84,6 @@ async def list_loras():
 @router.post("/v1/lora/load")
 async def load_lora(body: LoadLoraRequest):
     """Load a LoRA adapter."""
-    from vieneu import Vieneu
-
     lora_name = body.name
 
     if not state.tts:
@@ -136,7 +96,7 @@ async def load_lora(body: LoadLoraRequest):
             try:
                 if hasattr(state.tts, 'close'):
                     state.tts.close()
-                state.tts = Vieneu(backbone_repo=REMOTE_PYTORCH_REPO, gguf_filename=None)
+                state.tts = create_viener_engine("pytorch")
                 state.current_model_type = "pytorch"
             except Exception as e:
                 return JSONResponse(status_code=500, content={"error": f"Cannot load PyTorch model: {e}"})
