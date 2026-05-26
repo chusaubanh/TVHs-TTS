@@ -1,6 +1,7 @@
 """Global engine state with thread safety."""
 
 import threading
+from fastapi import HTTPException
 
 
 class EngineState:
@@ -28,3 +29,22 @@ class EngineState:
 
 # Global singleton instance
 state = EngineState()
+
+
+def get_state() -> EngineState:
+    """Get the global engine state singleton."""
+    return state
+
+
+def require_tts():
+    """Dependency: ensure TTS engine is loaded. Raises 503 if not."""
+    if state.tts is None:
+        raise HTTPException(status_code=503, detail="TTS engine not ready")
+    return state
+
+
+def require_omnivoice():
+    """Dependency: ensure OmniVoice is loaded. Raises 503 if not."""
+    if not state.omnivoice_loaded or state.omnivoice_tts is None:
+        raise HTTPException(status_code=503, detail="OmniVoice not loaded. Call /v1/omnivoice/load first.")
+    return state
