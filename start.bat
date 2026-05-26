@@ -54,7 +54,7 @@ timeout /t 1 /nobreak >nul
 
 :: 1. Backend
 echo [1/3] Starting Backend Server...
-start "TV Studio Backend" cmd /k "cd /d "%~dp0" && uv run --frozen python backend/api.py"
+start "TV Studio Backend" cmd /k "cd /d "%~dp0" && uv run --frozen python -m backend.main"
 
 :: 2. Wait for backend to be ready
 echo [2/3] Waiting for backend to start...

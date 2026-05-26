@@ -30,7 +30,7 @@ def wait_for_server(host: str = "127.0.0.1", port: int = 8000, timeout: float = 
 
 def start_backend(host: str = "127.0.0.1", port: int = 8000):
     """Start the FastAPI backend server."""
-    from backend.api import run_server
+    from backend.main import run_server
     run_server(host=host, port=port)
 
 

@@ -210,5 +210,8 @@ echo       - eSpeak NG (phonemization)
 echo       - Python dependencies
 echo       - Node.js dependencies
 echo       - OmniVoice model (optional)
+echo.
+echo     NOTE: After installation, the app runs fully offline.
+echo     Internet is only needed for the initial model download.
 echo ===================================================
 pause
