@@ -4,6 +4,7 @@ import { Layers, Mic, Upload, MessageSquare, Sliders, History, AlertTriangle, Ch
 import { useState } from "react";
 
 const SECTIONS = [
+  { id: "install", label: "Cài đặt", icon: <Download className="h-4 w-4" /> },
   { id: "intro", label: "Tổng quan", icon: <Layers className="h-4 w-4" /> },
   { id: "preset", label: "Preset Voices", icon: <Mic className="h-4 w-4" /> },
   { id: "clone", label: "Voice Clone", icon: <Upload className="h-4 w-4" /> },
@@ -41,6 +42,7 @@ export function GuideContent() {
 
         {/* Content */}
         <div className="space-y-8">
+          {activeSection === "install" && <InstallSection />}
           {activeSection === "intro" && <IntroSection />}
           {activeSection === "preset" && <PresetSection />}
           {activeSection === "clone" && <CloneSection />}
@@ -57,6 +59,52 @@ export function GuideContent() {
 }
 
 /* ═══ Sections ═══ */
+
+function InstallSection() {
+  return (
+    <Section title="Hướng dẫn cài đặt">
+      <p>Thành Vinh Studio hỗ trợ Windows, macOS và Linux. Xem hướng dẫn chi tiết cho hệ điều hành của bạn:</p>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <a href="/guide/install-guide.html" className="group rounded-xl border border-tvhs-border bg-tvhs-main p-5 transition hover:border-tvhs-accent hover:bg-tvhs-elevated">
+          <div className="text-2xl mb-2">🪟</div>
+          <div className="text-base font-bold text-tvhs-text group-hover:text-tvhs-accent">Windows</div>
+          <div className="mt-1 text-sm text-tvhs-text-secondary">install.bat tự động cài đặt</div>
+        </a>
+        <a href="/guide/install-guide.html#macos" className="group rounded-xl border border-tvhs-border bg-tvhs-main p-5 transition hover:border-tvhs-accent hover:bg-tvhs-elevated">
+          <div className="text-2xl mb-2">🍎</div>
+          <div className="text-base font-bold text-tvhs-text group-hover:text-tvhs-accent">macOS</div>
+          <div className="mt-1 text-sm text-tvhs-text-secondary">install.sh + Homebrew</div>
+        </a>
+        <a href="/guide/install-guide.html#linux" className="group rounded-xl border border-tvhs-border bg-tvhs-main p-5 transition hover:border-tvhs-accent hover:bg-tvhs-elevated">
+          <div className="text-2xl mb-2">🐧</div>
+          <div className="text-base font-bold text-tvhs-text group-hover:text-tvhs-accent">Linux</div>
+          <div className="mt-1 text-sm text-tvhs-text-secondary">install.sh (apt/dnf)</div>
+        </a>
+      </div>
+
+      <Callout type="info">
+        Xem hướng dẫn cài đặt chi tiết (bao gồm prerequisites, GPU setup, build standalone, troubleshooting) tại file <a href="/guide/install-guide.html" className="underline text-tvhs-accent">install-guide.html</a>.
+      </Callout>
+
+      <SubTitle>Cài đặt nhanh</SubTitle>
+      <div className="space-y-3">
+        <StepItem num={1} title="Clone repo" desc='git clone https://github.com/chusaubanh/ThanhVinhStudio && cd ThanhVinhStudio' />
+        <StepItem num={2} title="Cài đặt" desc="Windows: install.bat | macOS/Linux: ./install.sh" />
+        <StepItem num={3} title="Khởi động" desc="Windows: start.bat | macOS/Linux: ./start.sh" />
+      </div>
+
+      <SubTitle>Yêu cầu hệ thống</SubTitle>
+      <div className="space-y-2">
+        <ParamRow name="CPU" desc="Intel i5 / Ryzen 5 / Apple M1 trở lên" />
+        <ParamRow name="RAM" desc="8 GB tối thiểu, 16 GB khuyến nghị" />
+        <ParamRow name="GPU" desc="Không bắt buộc. NVIDIA 4GB+ VRAM hoặc Apple Silicon cho GPU mode" />
+        <ParamRow name="Python" desc="3.10+ (khuyến nghị 3.12)" />
+        <ParamRow name="Node.js" desc="18+ (khuyến nghị 20 LTS)" />
+      </div>
+    </Section>
+  );
+}
 
 function IntroSection() {
   return (
