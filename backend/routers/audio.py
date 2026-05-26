@@ -8,7 +8,7 @@ import numpy as np
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
 from fastapi.responses import JSONResponse, FileResponse
 
-from backend.config import OUTPUTS_DIR
+from backend.config import OUTPUTS_DIR, DEFAULT_SAMPLE_TEXT, NEUTRAL_EMOTION_TAG, DEFAULT_TEMPERATURE
 from backend.state import state
 from backend.helpers import (
     save_audio_to_disk, audio_to_response, generate_audio_with_pause,
@@ -37,7 +37,7 @@ async def get_voice_sample(voice_id: str):
                 return FileResponse(file, media_type="audio/wav")
 
     try:
-        audio_data = state.tts.infer(text="Xin chao, toi la giong noi tieng Viet.", voice=voice_data)
+        audio_data = state.tts.infer(text=DEFAULT_SAMPLE_TEXT, voice=voice_data)
         return audio_to_response(audio_data, state.tts.sample_rate)
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
@@ -62,12 +62,12 @@ async def generate_speech(request: SpeechRequest):
             except ValueError:
                 pass
 
-        emotion_tag = "<|emotion_0|>" if request.emotion == "natural" else None
+        emotion_tag = NEUTRAL_EMOTION_TAG if request.emotion == "natural" else None
 
         if request.stream:
             def audio_stream_generator():
                 with state.tts_lock:
-                    for chunk in state.tts.infer_stream(text, voice=voice, temperature=0.3, emotion_tag=emotion_tag):
+                    for chunk in state.tts.infer_stream(text, voice=voice, temperature=DEFAULT_TEMPERATURE, emotion_tag=emotion_tag):
                         if chunk is not None and len(chunk) > 0:
                             yield (chunk * 32767).astype(np.int16).tobytes()
             from fastapi.responses import StreamingResponse
@@ -131,7 +131,7 @@ async def generate_dialogue(request: DialogueRequest):
                 except ValueError:
                     pass
 
-                emotion_tag = "<|emotion_0|>" if line.emotion == "natural" else None
+                emotion_tag = NEUTRAL_EMOTION_TAG if line.emotion == "natural" else None
                 audio = generate_audio_with_pause(state.tts, line.text, voice=voice, silence_p=0.1, emotion_tag=emotion_tag)
                 audio_segments.append(audio)
 

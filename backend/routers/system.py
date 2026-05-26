@@ -5,7 +5,7 @@ import platform
 from pathlib import Path
 
 from fastapi import APIRouter
-from backend.config import LOCAL_GGUF_DIR, LOCAL_OMNIVOICE_DIR, REMOTE_GGUF_REPO, OUTPUTS_DIR, KNOWN_LORAS
+from backend.config import LOCAL_GGUF_DIR, LOCAL_OMNIVOICE_DIR, REMOTE_GGUF_REPO, OUTPUTS_DIR, KNOWN_LORAS, ESPEAK_WIN_PATH
 from backend.state import state
 from backend.helpers import is_base_model_downloaded, is_omnivoice_downloaded, list_local_loras, has_cuda, build_lora_list
 
@@ -18,7 +18,7 @@ def _check_espeak() -> dict:
     if espeak_path:
         return {"ok": True, "path": espeak_path}
     # Check common Windows install path
-    win_path = Path(r"C:\Program Files\eSpeak NG\espeak-ng.exe")
+    win_path = Path(ESPEAK_WIN_PATH)
     if win_path.exists():
         return {"ok": True, "path": str(win_path)}
     return {"ok": False, "path": None, "error": "eSpeak NG not found. Install from https://github.com/espeak-ng/espeak-ng/releases"}
@@ -89,7 +89,6 @@ async def health_check():
 @router.get("/v1/hardware/detect")
 async def detect_hardware():
     """Detect hardware and recommend best model."""
-    import platform
     info = {
         "cpu": platform.processor() or "Unknown",
         "ram_gb": 0,

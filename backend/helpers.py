@@ -17,6 +17,7 @@ from fastapi.responses import StreamingResponse
 from backend.config import (
     LOCAL_GGUF_DIR, LOCAL_LORA_DIR, LOCAL_OMNIVOICE_DIR,
     OUTPUTS_DIR, REMOTE_GGUF_REPO, KNOWN_LORAS,
+    DOWNLOAD_IGNORE_PATTERNS, DEFAULT_SILENCE_P,
 )
 from backend.state import state
 
@@ -172,7 +173,7 @@ def has_cuda() -> bool:
 # TTS generation
 # ============================================================================
 
-def generate_audio_with_pause(tts_engine, text: str, voice=None, silence_p: float = 0.15, emotion_tag: str = None) -> np.ndarray:
+def generate_audio_with_pause(tts_engine, text: str, voice=None, silence_p: float = DEFAULT_SILENCE_P, emotion_tag: str = None) -> np.ndarray:
     """Generate audio with [pause:XXX] marker support."""
     parts = re.split(r'\[pause:(\d+(?:\.\d+)?)(s|ms)?\]', text)
 
@@ -218,7 +219,7 @@ def download_with_progress(repo_id: str, local_dir: str, key: str, allow_pattern
         kwargs = {
             "repo_id": repo_id,
             "local_dir": local_dir,
-            "ignore_patterns": ["*.md", "*.txt", "*.pt", "*.pth", "optimizer*", "scheduler*", "rng_state*", "trainer_state*", "training_args*"],
+            "ignore_patterns": DOWNLOAD_IGNORE_PATTERNS,
         }
         if allow_patterns:
             kwargs["allow_patterns"] = allow_patterns

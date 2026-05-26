@@ -6,7 +6,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
-from backend.config import LOCAL_GGUF_DIR, GGUF_FILENAME
+from backend.config import (
+    LOCAL_GGUF_DIR, GGUF_FILENAME, OUTPUTS_DIR,
+    APP_TITLE, APP_VERSION, DEFAULT_HOST, DEFAULT_PORT, ALLOWED_ORIGINS,
+)
 from backend.state import state
 from backend.helpers import is_base_model_downloaded
 
@@ -36,7 +39,6 @@ async def lifespan(app):
                     codec_device="cpu",
                     emotion="natural",
                 )
-            from backend.config import OUTPUTS_DIR
             print("[OK] VieNeu-TTS-v2 model loaded from local files.")
             print(f"[OK] Outputs directory: {OUTPUTS_DIR}")
         except Exception as e:
@@ -51,19 +53,11 @@ async def lifespan(app):
 
 def create_app() -> FastAPI:
     """Create and configure the FastAPI application."""
-    app = FastAPI(title="ThanhVinhStudio API", version="4.0.1", lifespan=lifespan)
+    app = FastAPI(title=APP_TITLE, version=APP_VERSION, lifespan=lifespan)
 
-    # CORS — restrict to local dev ports
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[
-            "http://localhost:3000",
-            "http://127.0.0.1:3000",
-            "http://localhost:8000",
-            "http://127.0.0.1:8000",
-            "tauri://localhost",
-            "https://tauri.localhost",
-        ],
+        allow_origins=ALLOWED_ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -87,14 +81,14 @@ def create_app() -> FastAPI:
 app = create_app()
 
 
-def run_server(host: str = "127.0.0.1", port: int = 8000):
+def run_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
     """Start the server. Used by both __main__ and the desktop launcher."""
     uvicorn.run(app, host=host, port=port, log_level="warning")
 
 
 if __name__ == "__main__":
     from backend.helpers import find_available_port
-    port = find_available_port(8000)
-    if port != 8000:
-        print(f"[WARNING] Port 8000 is busy. Using port {port} instead.")
+    port = find_available_port(DEFAULT_PORT)
+    if port != DEFAULT_PORT:
+        print(f"[WARNING] Port {DEFAULT_PORT} is busy. Using port {port} instead.")
     run_server(port=port)

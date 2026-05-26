@@ -11,12 +11,13 @@ import socket
 
 # Fix imports for PyInstaller frozen mode
 if getattr(sys, 'frozen', False):
-    # Add bundled directory to path
     sys.path.insert(0, sys._MEIPASS)
     os.chdir(sys._MEIPASS)
 
+from backend.config import DEFAULT_HOST, DEFAULT_PORT
 
-def wait_for_server(host: str = "127.0.0.1", port: int = 8000, timeout: float = 30.0) -> bool:
+
+def wait_for_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT, timeout: float = 30.0) -> bool:
     """Wait until the backend server is accepting connections."""
     deadline = time.time() + timeout
     while time.time() < deadline:
@@ -28,28 +29,15 @@ def wait_for_server(host: str = "127.0.0.1", port: int = 8000, timeout: float = 
     return False
 
 
-def start_backend(host: str = "127.0.0.1", port: int = 8000):
+def start_backend(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
     """Start the FastAPI backend server."""
     from backend.main import run_server
     run_server(host=host, port=port)
 
 
-def find_available_port(start_port: int = 8000, max_tries: int = 10) -> int:
-    """Find an available port."""
-    for port in range(start_port, start_port + max_tries):
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            sock.bind(('127.0.0.1', port))
-            sock.close()
-            return port
-        except OSError:
-            continue
-    return start_port
-
-
 def main():
-    port = find_available_port(8000)
+    from backend.helpers import find_available_port
+    port = find_available_port(DEFAULT_PORT)
 
     # Start backend in a daemon thread
     server_thread = threading.Thread(
