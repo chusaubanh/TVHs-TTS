@@ -11,7 +11,7 @@ echo.
 :: ============================================================
 :: 1. Check / Install uv (Astral)
 :: ============================================================
-echo [1/5] Checking uv...
+echo [1/6] Checking uv...
 where uv >nul 2>nul
 if %errorlevel% neq 0 (
     echo    uv not found. Installing...
@@ -33,7 +33,7 @@ if %errorlevel% neq 0 (
 :: 2. Check / Install Node.js
 :: ============================================================
 echo.
-echo [2/5] Checking Node.js...
+echo [2/6] Checking Node.js...
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo    Node.js not found.
@@ -72,7 +72,7 @@ if %errorlevel% neq 0 (
 :: 3. Check / Install eSpeak NG
 :: ============================================================
 echo.
-echo [3/5] Checking eSpeak NG...
+echo [3/6] Checking eSpeak NG...
 where espeak-ng >nul 2>nul
 if %errorlevel% neq 0 (
     :: Also check common install path
@@ -122,7 +122,7 @@ if %errorlevel% neq 0 (
 :: 4. Setup Python Environment (Backend)
 :: ============================================================
 echo.
-echo [4/5] Setting up Python Environment (Backend)...
+echo [4/6] Setting up Python Environment (Backend)...
 echo -------------------------------------------
 
 :: Create venv if not exists
@@ -152,7 +152,7 @@ echo    Python dependencies installed.
 :: 5. Setup Node.js Environment (Frontend)
 :: ============================================================
 echo.
-echo [5/5] Setting up Node.js Environment (Frontend)...
+echo [5/6] Setting up Node.js Environment (Frontend)...
 echo -------------------------------------------
 cd frontend
 
@@ -172,6 +172,29 @@ if exist "node_modules" (
 cd ..
 
 :: ============================================================
+:: 6. Download OmniVoice Model
+:: ============================================================
+echo.
+echo [6/6] Downloading OmniVoice Model...
+echo -------------------------------------------
+echo    This will download the OmniVoice TTS model (~1.5GB).
+echo    You can skip this and download later from the app.
+echo.
+
+if exist "models\omnivoice" (
+    echo    OmniVoice model already exists, skipping.
+) else (
+    echo    Downloading OmniVoice from HuggingFace...
+    call uv run python -c "from huggingface_hub import snapshot_download; snapshot_download('k2-fsa/OmniVoice', local_dir='models/omnivoice', ignore_patterns=['*.md','*.txt'])"
+    if %errorlevel% neq 0 (
+        echo [WARNING] Failed to download OmniVoice model.
+        echo You can download it later from the app (OmniVoice tab).
+    ) else (
+        echo    OmniVoice model downloaded.
+    )
+)
+
+:: ============================================================
 :: Done
 :: ============================================================
 echo.
@@ -186,5 +209,6 @@ echo       - Node.js + npm
 echo       - eSpeak NG (phonemization)
 echo       - Python dependencies
 echo       - Node.js dependencies
+echo       - OmniVoice model (optional)
 echo ===================================================
 pause

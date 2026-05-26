@@ -40,6 +40,7 @@ omnivoice_loaded = False
 download_progress = {
     "base": {"status": "idle", "progress": 0, "message": ""},
     "lora": {"status": "idle", "progress": 0, "message": ""},
+    "omnivoice": {"status": "idle", "progress": 0, "message": ""},
 }
 
 
@@ -146,6 +147,7 @@ else:
 MODELS_DIR = BUNDLE_DIR / "models"
 LOCAL_GGUF_DIR = MODELS_DIR / "base" / "VieNeu-TTS-v2-gguf"
 LOCAL_LORA_DIR = MODELS_DIR / "lora"
+LOCAL_OMNIVOICE_DIR = MODELS_DIR / "omnivoice"
 
 # V2 model config
 GGUF_FILENAME = "VieNeu-TTS-v2-Q4-K-M.gguf"
@@ -164,6 +166,7 @@ OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 # Remote repos
 REMOTE_GGUF_REPO = "pnnbao-ump/VieNeu-TTS-v2"
 REMOTE_PYTORCH_REPO = "pnnbao-ump/VieNeu-TTS-v2"
+REMOTE_OMNIVOICE_REPO = "k2-fsa/OmniVoice"
 
 KNOWN_LORAS = {
     "ngoc-huyen": {
@@ -585,6 +588,42 @@ async def get_download_progress():
     return download_progress
 
 
+def is_omnivoice_downloaded() -> bool:
+    """Check if OmniVoice model is downloaded locally."""
+    return LOCAL_OMNIVOICE_DIR.exists() and any(LOCAL_OMNIVOICE_DIR.iterdir())
+
+
+@app.post("/v1/download/omnivoice")
+async def download_omnivoice():
+    """Download the OmniVoice model."""
+    if is_omnivoice_downloaded():
+        return {"status": "already_downloaded", "message": "OmniVoice model already exists locally."}
+
+    if download_progress["omnivoice"]["status"] == "downloading":
+        return {"status": "in_progress", "message": "Download already in progress."}
+
+    LOCAL_OMNIVOICE_DIR.mkdir(parents=True, exist_ok=True)
+
+    thread = threading.Thread(
+        target=_download_with_progress,
+        args=(REMOTE_OMNIVOICE_REPO, str(LOCAL_OMNIVOICE_DIR), "omnivoice"),
+        daemon=True,
+    )
+    thread.start()
+
+    return {"status": "started", "message": "Downloading OmniVoice model..."}
+
+
+@app.get("/v1/omnivoice/download-status")
+async def omnivoice_download_status():
+    """Check if OmniVoice model is downloaded."""
+    return {
+        "downloaded": is_omnivoice_downloaded(),
+        "local_path": str(LOCAL_OMNIVOICE_DIR),
+        "download": download_progress.get("omnivoice", {}),
+    }
+
+
 # ============================================================================
 # Model & Voice Endpoints
 # ============================================================================
@@ -933,7 +972,7 @@ class OmniVoiceCloneRequest(BaseModel):
 
 @app.post("/v1/omnivoice/load")
 async def load_omnivoice():
-    """Load OmniVoice model."""
+    """Load OmniVoice model (local cache first, then HuggingFace)."""
     global omnivoice_tts, omnivoice_loaded
 
     if omnivoice_loaded and omnivoice_tts is not None:
@@ -948,9 +987,18 @@ async def load_omnivoice():
         try:
             _device = "cuda:0" if _has_cuda() else "cpu"
             _dtype = "float16" if _has_cuda() else "float32"
-            omnivoice_tts = OmniVoiceModel.from_pretrained("k2-fsa/OmniVoice", device_map=_device, dtype=_dtype)
+
+            # Use local cache if available, otherwise download from HuggingFace
+            if is_omnivoice_downloaded():
+                model_path = str(LOCAL_OMNIVOICE_DIR)
+                print(f"Loading OmniVoice from local: {model_path}")
+            else:
+                model_path = REMOTE_OMNIVOICE_REPO
+                print(f"Downloading OmniVoice from HuggingFace: {model_path}")
+
+            omnivoice_tts = OmniVoiceModel.from_pretrained(model_path, device_map=_device, dtype=_dtype)
             omnivoice_loaded = True
-            return {"status": "ok", "device": _device}
+            return {"status": "ok", "device": _device, "source": "local" if is_omnivoice_downloaded() else "huggingface"}
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to load OmniVoice: {str(e)}")
 

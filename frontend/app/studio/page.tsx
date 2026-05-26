@@ -79,6 +79,10 @@ function HomeContent() {
   // OmniVoice state
   const [ovLoaded, setOvLoaded] = useState(false);
   const [ovLoading, setOvLoading] = useState(false);
+  const [ovDownloaded, setOvDownloaded] = useState(false);
+  const [ovDownloading, setOvDownloading] = useState(false);
+  const [ovDownloadProgress, setOvDownloadProgress] = useState(0);
+  const [ovDownloadMsg, setOvDownloadMsg] = useState("");
   const [ovText, setOvText] = useState("Xin chào, đây là OmniVoice, engine TTS hỗ trợ hơn 600 ngôn ngữ.");
   const [ovGenerating, setOvGenerating] = useState(false);
   const [ovAudioUrl, setOvAudioUrl] = useState<string | null>(null);
@@ -394,6 +398,64 @@ function HomeContent() {
 
   // ─── OmniVoice handlers ─────────────────────────────────────
 
+  const checkOvDownloadStatus = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/v1/omnivoice/download-status`);
+      if (res.ok) {
+        const d = await res.json();
+        setOvDownloaded(d.downloaded);
+      }
+    } catch {}
+  };
+
+  const pollOvDownload = async () => {
+    const poll = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/v1/download/progress`);
+        if (res.ok) {
+          const d = await res.json();
+          const ov = d.omnivoice;
+          setOvDownloadProgress(ov.progress || 0);
+          setOvDownloadMsg(ov.message || "");
+          if (ov.status === "done") {
+            setOvDownloaded(true);
+            setOvDownloading(false);
+            showToast("success", "Tải xong model OmniVoice!");
+            return true;
+          }
+          if (ov.status === "error") {
+            setOvDownloading(false);
+            showToast("error", ov.message || "Lỗi tải model");
+            return true;
+          }
+        }
+      } catch {}
+      return false;
+    };
+
+    while (!(await poll())) {
+      await new Promise((r) => setTimeout(r, 1500));
+    }
+  };
+
+  const handleOvDownload = async () => {
+    setOvDownloading(true);
+    setOvDownloadProgress(0);
+    try {
+      const res = await fetch(`${API_BASE}/v1/download/omnivoice`, { method: "POST" });
+      const d = await res.json();
+      if (d.status === "already_downloaded") {
+        setOvDownloaded(true);
+        setOvDownloading(false);
+        return;
+      }
+      await pollOvDownload();
+    } catch {
+      setOvDownloading(false);
+      showToast("error", "Không thể kết nối backend.");
+    }
+  };
+
   const handleOvLoad = async () => {
     setOvLoading(true);
     try {
@@ -463,6 +525,7 @@ function HomeContent() {
       const data = await checkStatus();
       if (data?.base_model.loaded) { await fetchVoices(); await fetchLoras(); await fetchAudioHistory(); }
       setStatusLoading(false);
+      checkOvDownloadStatus();
     })();
   }, []);
 
@@ -743,11 +806,41 @@ function HomeContent() {
                       </div>
                     </div>
 
-                    {/* Load/Unload */}
+                    {/* Download status */}
+                    {!ovDownloaded && !ovDownloading && (
+                      <div className="rounded-xl p-4" style={{ background: "rgba(245, 158, 11, 0.08)", border: "1px solid rgba(245, 158, 11, 0.2)" }}>
+                        <p className="text-sm font-medium" style={{ color: "#f59e0b" }}>Chưa có model OmniVoice</p>
+                        <p className="mt-1 text-xs text-tvhs-text-muted">Cần tải model (~1.5GB) trước khi sử dụng. Hoặc chạy install.bat để tự động tải.</p>
+                      </div>
+                    )}
+
+                    {/* Download progress */}
+                    {ovDownloading && (
+                      <div className="rounded-xl p-4" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
+                        <div className="mb-2 flex items-center justify-between">
+                          <span className="text-sm font-medium text-tvhs-text">Đang tải model OmniVoice...</span>
+                          <span className="text-xs font-mono text-tvhs-text-muted">{ovDownloadProgress}%</span>
+                        </div>
+                        <div className="h-2 w-full overflow-hidden rounded-full" style={{ background: "var(--color-tvhs-elevated)" }}>
+                          <div className="h-full rounded-full transition-all duration-500" style={{ width: `${ovDownloadProgress}%`, background: "linear-gradient(135deg, #c5a059, #e0c286)" }} />
+                        </div>
+                        <p className="mt-2 text-[10px] text-tvhs-text-muted">{ovDownloadMsg}</p>
+                      </div>
+                    )}
+
+                    {/* Load/Download/Unload */}
                     {!ovLoaded ? (
-                      <button onClick={handleOvLoad} disabled={ovLoading} className="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all disabled:opacity-50" style={{ background: "linear-gradient(135deg, #c5a059, #e0c286)", color: "#000" }}>
-                        {ovLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Đang tải model...</> : <><Radio className="h-4 w-4" /> Tải OmniVoice</>}
-                      </button>
+                      <div className="flex gap-2">
+                        {!ovDownloaded ? (
+                          <button onClick={handleOvDownload} disabled={ovDownloading} className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all disabled:opacity-50" style={{ background: "linear-gradient(135deg, #c5a059, #e0c286)", color: "#000" }}>
+                            {ovDownloading ? <><Loader2 className="h-4 w-4 animate-spin" /> Đang tải...</> : <><Radio className="h-4 w-4" /> Tải model OmniVoice</>}
+                          </button>
+                        ) : (
+                          <button onClick={handleOvLoad} disabled={ovLoading} className="flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition-all disabled:opacity-50" style={{ background: "linear-gradient(135deg, #c5a059, #e0c286)", color: "#000" }}>
+                            {ovLoading ? <><Loader2 className="h-4 w-4 animate-spin" /> Đang khởi động...</> : <><Zap className="h-4 w-4" /> Khởi động OmniVoice</>}
+                          </button>
+                        )}
+                      </div>
                     ) : (
                       <div className="flex gap-2">
                         <button onClick={handleOvUnload} className="rounded-lg px-4 py-2 text-xs font-medium transition-colors" style={{ border: "1px solid var(--color-tvhs-border)", color: "var(--color-tvhs-text-muted)" }}>Gỡ model</button>
