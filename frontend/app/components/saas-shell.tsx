@@ -2,8 +2,7 @@
 
 import { ReactNode } from "react";
 import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell } from "lucide-react";
-
-const LOGO_URL = "https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg";
+import { LOGO_URL } from "../lib/constants";
 
 interface NavItem {
   id: string;

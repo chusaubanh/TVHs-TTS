@@ -1,14 +1,8 @@
 "use client";
 
 import { Layers, Mic, MessageSquare, Clock, Cpu, Sparkles, Zap, ChevronRight } from "lucide-react";
-
-interface AudioFile { filename: string; size_kb: number; created: string }
-interface Voice { id: string; name: string }
-interface SystemStatus {
-  base_model: { downloaded: boolean; loaded: boolean };
-  current_model?: { type: string };
-  lora: { active: string | null };
-}
+import type { AudioFile, Voice, SystemStatus } from "../types";
+import { formatDuration, timeAgo } from "../lib/format";
 
 interface Props {
   audioHistory: AudioFile[];
@@ -25,28 +19,6 @@ function classifyAudio(filename: string): "clone" | "dialogue" | "preset" {
 
 function estimateDuration(sizeKb: number): number {
   return Math.round((sizeKb / 150) * 10) / 10;
-}
-
-function formatDuration(seconds: number): string {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  if (m < 60) return `${m}m ${s}s`;
-  const h = Math.floor(m / 60);
-  return `${h}h ${m % 60}m`;
-}
-
-function timeAgo(dateStr: string): string {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.max(0, now - then);
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Vừa xong";
-  if (mins < 60) return `${mins} phút trước`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} giờ trước`;
-  const days = Math.floor(hours / 24);
-  return `${days} ngày trước`;
 }
 
 export function Dashboard({ audioHistory, voices, status, onNavigate }: Props) {

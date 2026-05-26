@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { Play, Pause, Download, SkipBack, Sparkles } from "lucide-react";
+import { formatTime } from "../lib/format";
 
 interface Props {
   audioUrl: string | null;
@@ -11,13 +12,6 @@ interface Props {
   onRestart: () => void;
   onDownload: () => void;
   onGenerate: () => void;
-}
-
-function formatTime(seconds: number) {
-  if (!isFinite(seconds) || seconds < 0) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, onDownload, onGenerate }: Props) {

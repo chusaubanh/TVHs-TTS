@@ -20,3 +20,8 @@ export const MODEL_ENGINES = [
   { id: "pytorch", name: "GPU", desc: "PyTorch" },
   { id: "turbo", name: "Turbo", desc: "0.1B" },
 ];
+
+export const SAMPLE_RATE = 24000;
+export const POLL_INTERVAL_MS = 1500;
+export const WAVEFORM_BAR_COUNT = 44;
+export const TOAST_DURATION_MS = 4000;

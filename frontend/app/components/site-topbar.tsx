@@ -2,9 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const LOGO_URL =
-  "https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg";
+import { LOGO_URL } from "../lib/constants";
 
 const NAV_ITEMS = [
   { href: "/features", label: "Tính năng" },
@@ -66,5 +64,3 @@ export function SiteTopbar({ variant = "studio" }: SiteTopbarProps) {
     </header>
   );
 }
-
-export { LOGO_URL };

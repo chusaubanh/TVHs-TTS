@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { api } from "../lib/api";
+import { api, pollDownloadProgress } from "../lib/api";
 import { showToast } from "../components/toast";
-import type { LoRAAdapter, DownloadProgress } from "../types";
+import type { LoRAAdapter } from "../types";
 
 export function useLora(fetchVoices: () => Promise<void>) {
   const [loras, setLoras] = useState<LoRAAdapter[]>([]);
@@ -15,20 +15,6 @@ export function useLora(fetchVoices: () => Promise<void>) {
       setActiveLora(data.active || null);
     }
   }, []);
-
-  const pollDownloadProgress = (): Promise<void> =>
-    new Promise((resolve, reject) => {
-      const interval = setInterval(async () => {
-        const progress = await api.getDownloadProgress();
-        if (!progress) return;
-        const vals = Object.values(progress);
-        if (vals.every((p) => ["done", "idle", "error"].includes(p.status))) {
-          clearInterval(interval);
-          const err = vals.filter((p) => p.status === "error").map((p) => p.message).join(", ");
-          err ? reject(new Error(err)) : resolve();
-        }
-      }, 1500);
-    });
 
   const handleLoadLora = async (loraId: string, downloaded: boolean) => {
     setLoraLoading(true);

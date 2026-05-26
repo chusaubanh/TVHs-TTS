@@ -1,14 +1,8 @@
 "use client";
 
 import { Loader2, Download, RefreshCw, HardDrive, AlertCircle } from "lucide-react";
-
-interface DownloadProgress {
-  [key: string]: { status: string; progress: number; message: string };
-}
-
-interface SystemStatus {
-  base_model: { downloaded: boolean; loaded: boolean };
-}
+import type { SystemStatus, DownloadProgress } from "../types";
+import { LOGO_URL } from "../lib/constants";
 
 interface Props {
   status: SystemStatus | null;
@@ -35,7 +29,7 @@ export function SetupScreen({
         <div>
           <div className="mx-auto mb-4 h-16 w-16 overflow-hidden rounded-full shadow-xl" style={{ border: "1px solid var(--color-tvhs-border)" }}>
             <img
-              src="https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg"
+              src={LOGO_URL}
               alt="Thành Vinh Studio"
               className="h-full w-full object-cover"
             />

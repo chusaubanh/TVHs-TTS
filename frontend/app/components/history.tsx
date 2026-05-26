@@ -1,8 +1,8 @@
 "use client";
 
 import { Play, Trash2 } from "lucide-react";
-
-interface AudioFile { filename: string; size_kb: number; created: string }
+import type { AudioFile } from "../types";
+import { formatDate } from "../lib/format";
 
 interface Props {
   audioHistory: AudioFile[];
@@ -14,13 +14,6 @@ function classifyAudio(filename: string): { type: string; badge: string } {
   if (filename.startsWith("clone_")) return { type: "Clone", badge: "bg-blue-500/10 text-blue-400" };
   if (filename.startsWith("dialogue_")) return { type: "Dialogue", badge: "bg-purple-500/10 text-purple-400" };
   return { type: "Preset", badge: "bg-tvhs-accent-faint text-tvhs-accent" };
-}
-
-function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }) + " " + d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" });
-  } catch { return dateStr; }
 }
 
 export function History({ audioHistory, onPlay, onDelete }: Props) {

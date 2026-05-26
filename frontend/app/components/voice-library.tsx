@@ -1,6 +1,6 @@
 "use client";
 
-interface Voice { id: string; name: string }
+import type { Voice } from "../types";
 
 interface Props {
   voices: Voice[];

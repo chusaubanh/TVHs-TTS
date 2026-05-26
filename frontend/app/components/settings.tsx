@@ -2,13 +2,7 @@
 
 import { Cpu, Settings as SettingsIcon, Download, Info, RefreshCw } from "lucide-react";
 import { useState } from "react";
-
-interface SystemStatus {
-  base_model: { downloaded: boolean; loaded: boolean; local_path: string; remote_repo: string };
-  current_model?: { type: string };
-}
-
-interface HardwareInfo { cpu: string; ram_gb: number; gpu_name?: string | null; vram_gb: number; recommendation: string; reason: string }
+import type { SystemStatus, HardwareInfo } from "../types";
 
 interface Props {
   status: SystemStatus | null;

@@ -57,3 +57,19 @@ export const api = {
   deleteAudio: (filename: string) =>
     fetch(`${API_BASE}/v1/audio/file/${filename}`, { method: "DELETE" }),
 };
+
+export function pollDownloadProgress(onProgress?: (progress: DownloadProgress) => void): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const interval = setInterval(async () => {
+      const progress = await api.getDownloadProgress();
+      if (!progress) return;
+      onProgress?.(progress);
+      const vals = Object.values(progress);
+      if (vals.every((p) => ["done", "idle", "error"].includes(p.status))) {
+        clearInterval(interval);
+        const err = vals.filter((p) => p.status === "error").map((p) => p.message).join(", ");
+        err ? reject(new Error(err)) : resolve();
+      }
+    }, 1500);
+  });
+}

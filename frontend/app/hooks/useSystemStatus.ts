@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { api } from "../lib/api";
+import { api, pollDownloadProgress } from "../lib/api";
 import type { SystemStatus, DownloadProgress } from "../types";
 
 export function useSystemStatus() {
@@ -20,24 +20,6 @@ export function useSystemStatus() {
     return data;
   }, []);
 
-  const pollDownloadProgress = (): Promise<void> =>
-    new Promise((resolve, reject) => {
-      const interval = setInterval(async () => {
-        const progress = await api.getDownloadProgress();
-        if (!progress) return;
-        setDownloadProgress(progress);
-        const vals = Object.values(progress);
-        if (vals.every((p) => ["done", "idle", "error"].includes(p.status))) {
-          clearInterval(interval);
-          const err = vals
-            .filter((p) => p.status === "error")
-            .map((p) => p.message)
-            .join(", ");
-          err ? reject(new Error(err)) : resolve();
-        }
-      }, 1500);
-    });
-
   const handleDownloadBase = async (onReady?: () => Promise<void>) => {
     setDownloading(true);
     setDownloadError(null);
@@ -47,7 +29,7 @@ export function useSystemStatus() {
         await handleReloadModel(onReady);
         return;
       }
-      await pollDownloadProgress();
+      await pollDownloadProgress(setDownloadProgress);
       await handleReloadModel(onReady);
     } catch {
       setDownloadError("Không thể kết nối backend.");

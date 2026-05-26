@@ -5,12 +5,7 @@ import {
   Loader2, Sparkles, X, Check, RefreshCw, Volume2,
   Upload, Plus, Trash2, Timer, Zap, Play,
 } from "lucide-react";
-
-interface Voice { id: string; name: string }
-interface LoRAAdapter { id: string; name: string; source: string; downloaded?: boolean }
-interface HardwareInfo { cpu: string; ram_gb: number; gpu_name?: string | null; vram_gb: number; recommendation: string; reason: string }
-interface AudioFile { filename: string; size_kb: number; created: string }
-interface DialogueLine { id: number; text: string; voice: string; pauseAfter: number; emotion: string }
+import type { Voice, LoRAAdapter, HardwareInfo, AudioFile, DialogueLine } from "../types";
 
 interface Props {
   mode: "preset" | "clone" | "dialogue";
