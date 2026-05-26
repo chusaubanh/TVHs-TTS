@@ -17,7 +17,7 @@ import { LOGO_URL } from "../lib/constants";
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, breadcrumb: "/ Tổng quan", href: null },
   { id: "studio", label: "Studio", icon: Sparkles, breadcrumb: "/ Tạo giọng nói", href: null },
-  { id: "omnivoice", label: "OmniVoice", icon: Radio, breadcrumb: "/ OmniVoice TTS", href: null },
+  { id: "omnivoice", label: "Custom Voice", icon: Radio, breadcrumb: "/ Design Your Custom Voice", href: null },
   { id: "voices", label: "Voice Library", icon: Mic, breadcrumb: "/ Quản lý giọng", href: null },
   { id: "history", label: "History", icon: Clock, breadcrumb: "/ Lịch sử audio", href: null },
   { id: "features", label: "Tính năng", icon: Star, breadcrumb: "/ Features", href: "/features" },

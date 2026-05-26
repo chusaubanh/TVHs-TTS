@@ -3,6 +3,13 @@ import { api } from "../lib/api";
 import { showToast } from "../components/toast";
 import { API_BASE } from "../lib/constants";
 
+interface SavedVoice {
+  name: string;
+  language: string;
+  created: string;
+  audio_file: string;
+}
+
 export function useOmniVoice() {
   const [ovLoaded, setOvLoaded] = useState(false);
   const [ovLoading, setOvLoading] = useState(false);
@@ -17,10 +24,19 @@ export function useOmniVoice() {
   const [ovRefFile, setOvRefFile] = useState<File | null>(null);
   const [ovLanguage, setOvLanguage] = useState("vie");
   const [ovSpeed, setOvSpeed] = useState(1.0);
+  const [ovSelectedVoice, setOvSelectedVoice] = useState<string>("");
+  const [ovSaveName, setOvSaveName] = useState("");
+  const [ovSavedVoices, setOvSavedVoices] = useState<SavedVoice[]>([]);
+  const [ovIsPlaying, setOvIsPlaying] = useState(false);
 
   const checkOvDownloadStatus = useCallback(async () => {
     const data = await api.ovDownloadStatus();
     if (data) setOvDownloaded(data.downloaded);
+  }, []);
+
+  const fetchOvVoices = useCallback(async () => {
+    const data = await api.ovVoices();
+    if (data?.voices) setOvSavedVoices(data.voices);
   }, []);
 
   const pollOvDownload = async () => {
@@ -72,6 +88,7 @@ export function useOmniVoice() {
       const res = await fetch(`${API_BASE}/v1/omnivoice/load`, { method: "POST" });
       if (res.ok) {
         setOvLoaded(true);
+        await fetchOvVoices();
         showToast("success", "OmniVoice đã sẵn sàng!");
       } else {
         const d = await res.json();
@@ -117,18 +134,28 @@ export function useOmniVoice() {
         fd.append("reference_audio", ovRefFile);
         fd.append("language", ovLanguage);
         fd.append("speed", String(ovSpeed));
+        if (ovSaveName.trim()) fd.append("save_as", ovSaveName.trim());
         response = await fetch(`${API_BASE}/v1/omnivoice/clone`, { method: "POST", body: fd });
       } else {
+        // TTS mode - use selected voice if available
+        const body: Record<string, unknown> = { text: ovText, language: ovLanguage, speed: ovSpeed };
+        if (ovSelectedVoice) body.voice_name = ovSelectedVoice;
         response = await fetch(`${API_BASE}/v1/omnivoice/tts`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: ovText, language: ovLanguage, speed: ovSpeed }),
+          body: JSON.stringify(body),
         });
       }
       if (response.ok) {
         const blob = await response.blob();
         if (ovAudioUrl) URL.revokeObjectURL(ovAudioUrl);
         setOvAudioUrl(URL.createObjectURL(blob));
+        // Auto-sync voices after successful clone with save
+        if (ovMode === "clone" && ovSaveName.trim()) {
+          await fetchOvVoices();
+          setOvSaveName("");
+          showToast("success", `Đã lưu voice "${ovSaveName.trim()}"!`);
+        }
       } else {
         const d = await response.json().catch(() => null);
         showToast("error", d?.detail || "Lỗi tạo âm thanh");
@@ -138,6 +165,34 @@ export function useOmniVoice() {
     } finally {
       setOvGenerating(false);
     }
+  };
+
+  const handleOvDeleteVoice = async (name: string) => {
+    try {
+      const res = await api.ovDeleteVoice(name);
+      if (res.ok) {
+        await fetchOvVoices();
+        if (ovSelectedVoice === name) setOvSelectedVoice("");
+        showToast("success", `Đã xóa voice "${name}"`);
+      } else {
+        showToast("error", "Lỗi xóa voice");
+      }
+    } catch {
+      showToast("error", "Lỗi kết nối");
+    }
+  };
+
+  const handleOvPlayPause = () => {
+    if (!ovAudioUrl) return;
+    setOvIsPlaying(!ovIsPlaying);
+  };
+
+  const handleOvDownloadAudio = () => {
+    if (!ovAudioUrl) return;
+    const a = document.createElement("a");
+    a.href = ovAudioUrl;
+    a.download = `omnivoice_${new Date().toISOString().slice(0, 19).replace(/[T:]/g, "-")}.wav`;
+    a.click();
   };
 
   return {
@@ -154,15 +209,25 @@ export function useOmniVoice() {
     ovRefFile,
     ovLanguage,
     ovSpeed,
+    ovSelectedVoice,
+    ovSaveName,
+    ovSavedVoices,
+    ovIsPlaying,
     setOvText,
     setOvMode,
     setOvRefFile,
     setOvLanguage,
     setOvSpeed,
+    setOvSelectedVoice,
+    setOvSaveName,
     checkOvDownloadStatus,
+    fetchOvVoices,
     handleOvDownload,
     handleOvLoad,
     handleOvUnload,
     handleOvGenerate,
+    handleOvDeleteVoice,
+    handleOvPlayPause,
+    handleOvDownloadAudio,
   };
 }

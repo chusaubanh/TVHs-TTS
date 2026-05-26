@@ -30,6 +30,10 @@ else:
     OUTPUTS_DIR = BUNDLE_DIR / "outputs"
 OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
 
+# Saved OmniVoice clones (persistent across sessions)
+SAVED_VOICES_DIR = OUTPUTS_DIR / "saved_voices"
+SAVED_VOICES_DIR.mkdir(parents=True, exist_ok=True)
+
 # Remote repos
 REMOTE_GGUF_REPO = "pnnbao-ump/VieNeu-TTS-v2"
 REMOTE_PYTORCH_REPO = "pnnbao-ump/VieNeu-TTS-v2"

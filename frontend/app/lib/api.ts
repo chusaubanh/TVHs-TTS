@@ -50,6 +50,8 @@ export const api = {
   ovLoad: () => post("/v1/omnivoice/load"),
   ovUnload: () => post("/v1/omnivoice/unload"),
   ovStatus: () => get<{ loaded: boolean; has_cuda: boolean }>("/v1/omnivoice/status"),
+  ovVoices: () => get<{ voices: Array<{ name: string; language: string; created: string; audio_file: string }> }>("/v1/omnivoice/voices"),
+  ovDeleteVoice: (name: string) => fetch(`${API_BASE}/v1/omnivoice/voice/${encodeURIComponent(name)}`, { method: "DELETE" }),
 
   // Delete
   deleteAudio: (filename: string) =>

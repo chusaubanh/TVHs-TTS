@@ -40,6 +40,7 @@ class OmniVoiceTTSRequest(BaseModel):
     text: str = Field(..., min_length=1)
     language: str = Field(default="vie", description="Language code (ISO 639-3)")
     speed: float = Field(default=1.0, ge=0.5, le=2.0)
+    voice_name: Optional[str] = Field(default=None, description="Saved voice name to use as reference")
 
 
 class OmniVoiceCloneRequest(BaseModel):
