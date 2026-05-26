@@ -49,3 +49,6 @@ installer.nsi
 # Logs
 *.log
 npm-debug.log*
+
+# Tools
+.grapuco/
