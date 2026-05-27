@@ -50,13 +50,14 @@
 
 | Phần mềm | Phiên bản | Bắt buộc? | Tải tại |
 |-----------|-----------|-----------|---------|
+| **Git** | latest | Có | https://git-scm.com/downloads |
 | **Python** | 3.10+ (khuyến nghị 3.12) | Có | https://www.python.org/downloads/ |
 | **Node.js** | 18+ (khuyến nghị 20 LTS) | Có | https://nodejs.org/ |
 | **uv** (Astral) | latest | Có | `powershell -c "irm https://astral.sh/uv/install.ps1 \| iex"` |
 | **eSpeak NG** | latest | Có | https://github.com/espeak-ng/espeak-ng/releases |
 | **NVIDIA Driver** | 570.65+ (CUDA 12.8) | Không (cho GPU) | https://www.nvidia.com/drivers |
 
-> Script cài đặt sẽ tự động kiểm tra và cài đặt tất cả prerequisites nếu thiếu. Chỉ cần cài **Python** và **Node.js** trước.
+> Script cài đặt sẽ tự động kiểm tra Git, uv, Node.js, eSpeak NG và dependencies. Người dùng vẫn nên cài sẵn **Git**, **Python** và **Node.js** trước để giảm lỗi trên máy mới.
 
 ### Cách 1: Dùng script tự động (khuyến nghị)
 
@@ -64,7 +65,7 @@
 ```bash
 git clone https://github.com/chusaubanh/ThanhVinhStudio
 cd ThanhVinhStudio
-install.bat    # Tự động cài uv, Node.js, eSpeak NG, Python & Node dependencies
+install.bat    # Tự động kiểm tra Git, uv, Node.js, eSpeak NG, Python & Node dependencies
 start.bat      # Khởi động ứng dụng
 ```
 
@@ -82,7 +83,7 @@ Nếu nhờ AI Agent như Codex, Claude Code hoặc Antigravity setup project tr
 git clone https://github.com/chusaubanh/ThanhVinhStudio
 cd ThanhVinhStudio
 chmod +x install.sh start.sh
-./install.sh   # Tự động cài uv, Node.js, eSpeak NG, Python & Node dependencies
+./install.sh   # Tự động kiểm tra Git, uv, Node.js, eSpeak NG, Python & Node dependencies
 ./start.sh     # Khởi động ứng dụng
 ```
 

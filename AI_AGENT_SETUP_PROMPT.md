@@ -20,6 +20,7 @@ Ngữ cảnh repo:
 - Project không đảm bảo clone về là chạy ngay nếu máy thiếu runtime, dependency hệ thống hoặc model.
 - Nếu thiếu media/output files thì xem đó là bình thường.
 - Không commit secret. Nếu cần secret/API key, dùng environment variable placeholder trong .env.local hoặc .env.example.
+- Git là bắt buộc để clone/cập nhật source code. Trên Windows nên dùng Git for Windows; trên macOS có thể dùng Xcode Command Line Tools hoặc Homebrew.
 - Frontend là Next.js/React, nằm trong thư mục frontend, cần Node.js 20+.
 - Backend là FastAPI/Python, entry point chính là python -m backend.main, dùng uv để quản lý môi trường.
 - Backend có thể cần Python 3.10+, uv, eSpeak NG, FFmpeg, Torch, Transformers/Hugging Face tooling, pydub/soundfile và OmniVoice tùy chức năng.
