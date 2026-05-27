@@ -12,30 +12,7 @@ echo
 echo "If installation fails, copy the full terminal output and send it to support."
 echo
 
-echo "[1/8] Checking Git..."
-if ! command -v git >/dev/null 2>&1; then
-    echo "   Git not found. Installing..."
-    if [[ "${OSTYPE:-}" == "darwin"* ]] && command -v brew >/dev/null 2>&1; then
-        brew install git
-    elif [[ "${OSTYPE:-}" == "darwin"* ]]; then
-        echo "   Homebrew not found. Opening Xcode Command Line Tools installer..."
-        xcode-select --install || true
-        echo "   [ERROR] Git is required. Finish the Apple installer, then run ./install.sh again."
-        exit 1
-    elif command -v apt-get >/dev/null 2>&1; then
-        sudo apt-get update
-        sudo apt-get install -y git
-    elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y git
-    else
-        echo "   [ERROR] Please install Git from https://git-scm.com/"
-        exit 1
-    fi
-fi
-echo "   git: $(git --version)"
-
-echo
-echo "[2/8] Checking uv..."
+echo "[1/7] Checking uv..."
 if ! command -v uv >/dev/null 2>&1; then
     echo "   uv not found. Installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -44,7 +21,7 @@ fi
 echo "   uv: $(uv --version)"
 
 echo
-echo "[3/8] Checking Node.js..."
+echo "[2/7] Checking Node.js..."
 if ! command -v node >/dev/null 2>&1; then
     echo "   Node.js not found."
     if [[ "${OSTYPE:-}" == "darwin"* ]] && command -v brew >/dev/null 2>&1; then
@@ -67,7 +44,7 @@ echo "   node: $(node --version)"
 echo "   npm:  $(npm --version)"
 
 echo
-echo "[4/8] Checking eSpeak NG..."
+echo "[3/7] Checking eSpeak NG..."
 if ! command -v espeak-ng >/dev/null 2>&1; then
     echo "   eSpeak NG not found."
     if [[ "${OSTYPE:-}" == "darwin"* ]] && command -v brew >/dev/null 2>&1; then
@@ -86,7 +63,7 @@ else
 fi
 
 echo
-echo "[5/8] Setting up Python environment..."
+echo "[4/7] Setting up Python environment..."
 if [ ! -d ".venv" ]; then
     uv venv
 else
@@ -103,7 +80,7 @@ echo "   Verifying Python imports..."
 uv run --frozen python -c "from sea_g2p import Normalizer; from vieneu import Vieneu; print('Python dependencies OK')"
 
 echo
-echo "[6/8] Setting up frontend dependencies..."
+echo "[5/7] Setting up frontend dependencies..."
 rm -f frontend/.next/dev/lock
 rm -rf frontend/.next/dev
 (
@@ -113,7 +90,7 @@ rm -rf frontend/.next/dev
 )
 
 echo
-echo "[7/8] Downloading OmniVoice model..."
+echo "[6/7] Downloading OmniVoice model..."
 echo "   This is optional and large (~1.5GB)."
 if [ -d "models/omnivoice" ] && [ "$(ls -A models/omnivoice 2>/dev/null)" ]; then
     echo "   OmniVoice model already exists, skipping."
@@ -133,7 +110,7 @@ else
 fi
 
 echo
-echo "[8/8] Final backend verification..."
+echo "[7/7] Final backend verification..."
 uv run --frozen python -m compileall backend
 
 echo

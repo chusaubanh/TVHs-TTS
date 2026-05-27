@@ -15,31 +15,9 @@ echo Log tip: if installation fails, copy the full terminal output and send it t
 echo.
 
 :: ============================================================
-:: 1. Check / Install Git
+:: 1. Check / Install uv (Astral)
 :: ============================================================
-echo [1/8] Checking Git...
-where git >nul 2>nul
-if %errorlevel% neq 0 (
-    echo    Git not found. Installing Git...
-    where winget >nul 2>nul
-    if %errorlevel% equ 0 (
-        winget install --id Git.Git -e --source winget --accept-package-agreements --accept-source-agreements
-        set "PATH=%ProgramFiles%\Git\cmd;%PATH%"
-    ) else (
-        echo [ERROR] Git is required.
-        echo Please install Git from https://git-scm.com/download/win
-        pause
-        exit /b 1
-    )
-) else (
-    echo    Git found:
-    git --version
-)
-
-:: ============================================================
-:: 2. Check / Install uv (Astral)
-:: ============================================================
-echo [2/8] Checking uv...
+echo [1/7] Checking uv...
 where uv >nul 2>nul
 if %errorlevel% neq 0 (
     echo    uv not found. Installing...
@@ -58,10 +36,10 @@ if %errorlevel% neq 0 (
 )
 
 :: ============================================================
-:: 3. Check / Install Node.js
+:: 2. Check / Install Node.js
 :: ============================================================
 echo.
-echo [3/8] Checking Node.js...
+echo [2/7] Checking Node.js...
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo    Node.js not found.
@@ -97,10 +75,10 @@ if %errorlevel% neq 0 (
 )
 
 :: ============================================================
-:: 4. Check / Install eSpeak NG
+:: 3. Check / Install eSpeak NG
 :: ============================================================
 echo.
-echo [4/8] Checking eSpeak NG...
+echo [3/7] Checking eSpeak NG...
 where espeak-ng >nul 2>nul
 if %errorlevel% neq 0 (
     :: Also check common install path
@@ -147,10 +125,10 @@ if %errorlevel% neq 0 (
 )
 
 :: ============================================================
-:: 5. Setup Python Environment (Backend)
+:: 4. Setup Python Environment (Backend)
 :: ============================================================
 echo.
-echo [5/8] Setting up Python Environment (Backend)...
+echo [4/7] Setting up Python Environment (Backend)...
 echo -------------------------------------------
 
 :: Create venv if not exists
@@ -193,10 +171,10 @@ if %errorlevel% neq 0 (
 )
 
 :: ============================================================
-:: 6. Setup Node.js Environment (Frontend)
+:: 5. Setup Node.js Environment (Frontend)
 :: ============================================================
 echo.
-echo [6/8] Setting up Node.js Environment (Frontend)...
+echo [5/7] Setting up Node.js Environment (Frontend)...
 echo -------------------------------------------
 cd frontend
 
@@ -226,10 +204,10 @@ echo    Node.js dependencies installed and verified.
 cd ..
 
 :: ============================================================
-:: 7. Download OmniVoice Model
+:: 6. Download OmniVoice Model
 :: ============================================================
 echo.
-echo [7/8] Downloading OmniVoice Model...
+echo [6/7] Downloading OmniVoice Model...
 echo -------------------------------------------
 echo    This will download the OmniVoice TTS model (~1.5GB).
 echo    You can skip this and download later from the app.
@@ -249,10 +227,10 @@ if exist "models\omnivoice" (
 )
 
 :: ============================================================
-:: 8. Final verification
+:: 7. Final verification
 :: ============================================================
 echo.
-echo [8/8] Final verification...
+echo [7/7] Final verification...
 call uv run --frozen python -m compileall backend
 if %errorlevel% neq 0 (
     echo [ERROR] Backend compile verification failed.
@@ -270,7 +248,6 @@ echo.
 echo     Run "start.bat" to launch the application.
 echo.
 echo     Prerequisites installed:
-echo       - Git
 echo       - uv (Python package manager)
 echo       - Node.js + npm
 echo       - eSpeak NG (phonemization)
