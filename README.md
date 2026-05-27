@@ -75,6 +75,8 @@ repair.bat
 start.bat
 ```
 
+Nếu nhờ AI Agent như Codex, Claude Code hoặc Antigravity setup project trên máy khác, dùng prompt trong [`AI_AGENT_SETUP_PROMPT.md`](AI_AGENT_SETUP_PROMPT.md).
+
 **macOS / Linux:**
 ```bash
 git clone https://github.com/chusaubanh/ThanhVinhStudio
@@ -99,6 +101,8 @@ chmod +x repair.sh
 ./repair.sh
 ./start.sh
 ```
+
+Nếu nhờ AI Agent như Codex, Claude Code hoặc Antigravity setup project trên máy khác, dùng prompt trong [`AI_AGENT_SETUP_PROMPT.md`](AI_AGENT_SETUP_PROMPT.md).
 
 > macOS: Cần cài [Homebrew](https://brew.sh/) trước để script tự động cài eSpeak NG.
 > Linux: Script hỗ trợ apt (Ubuntu/Debian) và dnf (Fedora).
