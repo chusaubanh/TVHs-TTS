@@ -3,851 +3,470 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Thành Vinh Studio — Hướng Dẫn Cài Đặt</title>
+  <title>Thành Vinh Studio - Hướng Dẫn Cài Đặt</title>
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #12121a;
-      --border: #1e1e2e;
-      --text: #e8e6e3;
-      --text-muted: #8a8a9a;
-      --accent: #c5a059;
-      --accent-light: #e0c286;
-      --success: #22c55e;
-      --warn: #f59e0b;
-      --error: #ef4444;
-      --code-bg: #1a1a28;
-      --gradient: linear-gradient(135deg, #c5a059, #e0c286);
+      --bg: #09090d;
+      --surface: #15151b;
+      --surface-2: #1d1d25;
+      --border: #2a2a34;
+      --text: #f1eee8;
+      --muted: #a6a09a;
+      --soft: #736f6a;
+      --gold: #d7b76a;
+      --gold-2: #f0d891;
+      --red: #ef4444;
+      --green: #22c55e;
+      --blue: #60a5fa;
+      --amber: #f59e0b;
+      --code: #101016;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: var(--bg);
+      margin: 0;
+      background:
+        radial-gradient(circle at top, rgba(215, 183, 106, 0.12), transparent 34rem),
+        linear-gradient(180deg, #0c0c10, var(--bg));
       color: var(--text);
-      line-height: 1.7;
-      font-size: 15px;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.65;
     }
 
-    /* Header */
-    .hero {
-      background: linear-gradient(135deg, #0d0d15 0%, #1a1520 50%, #0d0d15 100%);
-      border-bottom: 1px solid var(--border);
-      padding: 60px 20px 50px;
-      text-align: center;
-    }
-    .hero-logo {
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      border: 2px solid var(--accent);
-      margin-bottom: 16px;
-    }
-    .hero h1 {
-      font-size: 28px;
-      background: var(--gradient);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-    }
-    .hero p { color: var(--text-muted); font-size: 15px; }
-
-    /* Layout */
-    .container {
-      max-width: 860px;
-      margin: 0 auto;
-      padding: 40px 20px 80px;
-    }
-
-    /* TOC */
-    .toc {
-      background: var(--surface);
+    a { color: inherit; }
+    code {
       border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px 28px;
-      margin-bottom: 40px;
+      border-radius: 6px;
+      background: var(--code);
+      padding: 2px 6px;
+      color: var(--gold-2);
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-size: 0.92em;
     }
-    .toc h2 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: var(--accent); margin-bottom: 12px; }
-    .toc ol { padding-left: 20px; }
-    .toc li { margin-bottom: 6px; }
-    .toc a { color: var(--text-muted); text-decoration: none; transition: color .2s; }
-    .toc a:hover { color: var(--accent); }
 
-    /* Sections */
+    .hero {
+      padding: 56px 20px 34px;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      border: 1px solid rgba(215, 183, 106, 0.5);
+      box-shadow: 0 18px 60px rgba(215, 183, 106, 0.18);
+      object-fit: cover;
+    }
+    h1 {
+      margin: 18px 0 8px;
+      font-size: clamp(30px, 5vw, 48px);
+      line-height: 1.08;
+      letter-spacing: 0;
+    }
+    .lead {
+      max-width: 720px;
+      margin: 0 auto;
+      color: var(--muted);
+      font-size: 17px;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 30px 20px 80px;
+    }
+
+    .quick-box {
+      border: 1px solid rgba(215, 183, 106, 0.28);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(215, 183, 106, 0.09), rgba(255, 255, 255, 0.025));
+      padding: 22px;
+      margin: 0 0 26px;
+    }
+    .quick-box h2 {
+      margin: 0 0 10px;
+      color: var(--gold-2);
+      font-size: 20px;
+    }
+    .quick-box p { margin: 0; color: var(--muted); }
+
+    .toc {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 28px 0 36px;
+    }
+    .toc a {
+      display: block;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.035);
+      padding: 11px 12px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .toc a:hover {
+      color: var(--gold-2);
+      border-color: rgba(215, 183, 106, 0.35);
+    }
+
     .section {
-      margin-bottom: 48px;
+      margin: 36px 0;
+      padding-top: 8px;
     }
     .section h2 {
-      font-size: 22px;
-      color: var(--accent);
-      margin-bottom: 16px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid var(--border);
-    }
-    .section h3 {
-      font-size: 17px;
+      margin: 0 0 16px;
+      font-size: 26px;
       color: var(--text);
-      margin: 24px 0 10px;
     }
-    .section p { margin-bottom: 12px; color: var(--text-muted); }
-    .section ul, .section ol { padding-left: 24px; margin-bottom: 12px; }
-    .section li { margin-bottom: 6px; color: var(--text-muted); }
-    .section li strong { color: var(--text); }
+    .section > p {
+      color: var(--muted);
+      margin: 0 0 14px;
+    }
 
-    /* Code blocks */
-    .code-block {
-      background: var(--code-bg);
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .card {
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      margin: 12px 0 16px;
-      overflow-x: auto;
-      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-      font-size: 13px;
-      line-height: 1.6;
-      color: #c9d1d9;
-      position: relative;
+      border-radius: 14px;
+      background: var(--surface);
+      padding: 18px;
     }
-    .code-block .label {
-      position: absolute;
-      top: 8px;
-      right: 12px;
-      font-size: 10px;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 18px;
+      color: var(--gold-2);
     }
-    .code-block .comment { color: #6a737d; }
-    .code-block .cmd { color: #79c0ff; }
-    .code-block .flag { color: #d2a8ff; }
-
-    /* Info boxes */
-    .box {
-      border-radius: 10px;
-      padding: 16px 20px;
-      margin: 16px 0;
-      border-left: 3px solid;
-    }
-    .box-info {
-      background: rgba(59, 130, 246, 0.08);
-      border-color: #3b82f6;
-    }
-    .box-warn {
-      background: rgba(245, 158, 11, 0.08);
-      border-color: var(--warn);
-    }
-    .box-success {
-      background: rgba(34, 197, 94, 0.08);
-      border-color: var(--success);
-    }
-    .box-error {
-      background: rgba(239, 68, 68, 0.08);
-      border-color: var(--error);
-    }
-    .box-title {
-      font-weight: 600;
-      font-size: 13px;
-      margin-bottom: 4px;
-    }
-    .box-info .box-title { color: #3b82f6; }
-    .box-warn .box-title { color: var(--warn); }
-    .box-success .box-title { color: var(--success); }
-    .box-error .box-title { color: var(--error); }
-    .box p { margin-bottom: 0; font-size: 14px; }
-
-    /* Steps */
-    .step {
-      display: flex;
-      gap: 16px;
-      margin: 20px 0;
-    }
-    .step-num {
-      flex-shrink: 0;
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--gradient);
-      color: #000;
-      font-weight: 700;
+    .card p {
+      margin: 0 0 12px;
+      color: var(--muted);
       font-size: 14px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-top: 2px;
     }
-    .step-body { flex: 1; }
-    .step-body h4 { font-size: 15px; color: var(--text); margin-bottom: 4px; }
-    .step-body p { font-size: 14px; margin-bottom: 8px; }
 
-    /* Table */
+    .steps {
+      display: grid;
+      gap: 12px;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 14px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.035);
+      padding: 16px;
+    }
+    .num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #15120a;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+    }
+    .step h3 {
+      margin: 0 0 4px;
+      font-size: 16px;
+    }
+    .step p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .command {
+      margin: 12px 0 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--code);
+      padding: 14px;
+      overflow-x: auto;
+      color: #d8dee9;
+      font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+    .button-name {
+      display: inline-block;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--gold), var(--gold-2));
+      color: #15120a;
+      padding: 8px 13px;
+      font-weight: 900;
+      font-size: 13px;
+    }
+
+    .notice {
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin: 14px 0;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.035);
+      color: var(--muted);
+    }
+    .notice strong { color: var(--text); }
+    .notice.warn { border-color: rgba(245, 158, 11, 0.35); background: rgba(245, 158, 11, 0.08); }
+    .notice.good { border-color: rgba(34, 197, 94, 0.35); background: rgba(34, 197, 94, 0.08); }
+    .notice.bad { border-color: rgba(239, 68, 68, 0.35); background: rgba(239, 68, 68, 0.08); }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 12px 0 16px;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid var(--border);
       font-size: 14px;
     }
     th, td {
-      padding: 10px 14px;
-      text-align: left;
       border-bottom: 1px solid var(--border);
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
     }
     th {
-      background: var(--surface);
-      color: var(--accent);
+      background: var(--surface-2);
+      color: var(--gold-2);
       font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
     }
-    td { color: var(--text-muted); }
-    td strong { color: var(--text); }
+    td { color: var(--muted); }
+    tr:last-child td { border-bottom: 0; }
 
-    /* Tabs */
-    .tabs {
-      display: flex;
-      gap: 4px;
-      margin-bottom: 0;
-    }
-    .tab-btn {
-      padding: 8px 20px;
-      border: 1px solid var(--border);
-      border-bottom: none;
-      border-radius: 8px 8px 0 0;
-      background: transparent;
-      color: var(--text-muted);
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all .2s;
-    }
-    .tab-btn.active {
-      background: var(--code-bg);
-      color: var(--accent);
-      border-color: var(--accent);
-    }
-    .tab-content {
-      display: none;
-      background: var(--code-bg);
-      border: 1px solid var(--border);
-      border-radius: 0 8px 8px 8px;
-      padding: 20px;
-    }
-    .tab-content.active { display: block; }
-
-    /* Badge */
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 600;
-    }
-    .badge-required { background: rgba(239,68,68,0.15); color: var(--error); }
-    .badge-optional { background: rgba(59,130,246,0.15); color: #3b82f6; }
-    .badge-auto { background: rgba(34,197,94,0.15); color: var(--success); }
-
-    .feature-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin: 18px 0 28px;
-    }
-    .feature-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+    details {
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 16px;
+      background: var(--surface);
+      padding: 14px 16px;
+      margin: 10px 0;
     }
-    .feature-card strong {
-      display: block;
+    summary {
+      cursor: pointer;
       color: var(--text);
-      font-size: 14px;
-      margin-bottom: 5px;
+      font-weight: 800;
     }
-    .feature-card span {
-      color: var(--text-muted);
-      font-size: 13px;
-    }
-    .pill-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 14px 0 4px;
-    }
-    .pill {
-      border: 1px solid rgba(197,160,89,0.28);
-      border-radius: 999px;
-      background: rgba(197,160,89,0.08);
-      color: var(--accent-light);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 5px 10px;
-    }
+    details p, details li { color: var(--muted); }
 
-    /* Footer */
     .footer {
-      text-align: center;
-      padding: 32px 20px;
       border-top: 1px solid var(--border);
-      color: var(--text-muted);
+      color: var(--soft);
+      text-align: center;
+      padding: 26px 20px;
       font-size: 13px;
     }
 
-    /* Responsive */
-    @media (max-width: 640px) {
-      .hero { padding: 40px 16px 32px; }
-      .hero h1 { font-size: 22px; }
-      .container { padding: 24px 16px 60px; }
-      .step { flex-direction: column; gap: 8px; }
-      .feature-grid { grid-template-columns: 1fr; }
+    @media (max-width: 760px) {
+      .toc, .cards { grid-template-columns: 1fr; }
+      .container { padding: 24px 14px 64px; }
+      .step { grid-template-columns: 1fr; }
+      .command { white-space: normal; }
     }
   </style>
 </head>
 <body>
+  <header class="hero">
+    <img class="logo" src="https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg" alt="Thành Vinh Studio" />
+    <h1>Hướng dẫn cài đặt Thành Vinh Studio</h1>
+    <p class="lead">Tài liệu này dành cho người không rành công nghệ. Bạn chỉ cần làm đúng theo phần dành cho hệ điều hành của mình.</p>
+  </header>
 
-<!-- ═══ HERO ═══ -->
-<header class="hero">
-  <img src="https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg" alt="Logo" class="hero-logo" />
-  <h1>Thành Vinh Studio</h1>
-  <p>Hướng dẫn cài đặt cho studio tạo giọng offline: VieNeu-TTS, OmniVoice, LoRA và voice clone</p>
-</header>
+  <main class="container">
+    <div class="quick-box">
+      <h2>Nếu không biết bắt đầu từ đâu</h2>
+      <p>Windows: bấm <strong>install.bat</strong>, sau đó bấm <strong>start.bat</strong>. macOS: bấm <strong>install.command</strong>, sau đó bấm <strong>start.command</strong>. Nếu bị lỗi lặt vặt, chạy file <strong>repair</strong> tương ứng rồi mở lại app.</p>
+    </div>
 
-<div class="container">
+    <nav class="toc">
+      <a href="#before">Trước khi cài</a>
+      <a href="#easy">Cài nhanh</a>
+      <a href="#repair">Khi bị lỗi</a>
+      <a href="#support">Cho người hỗ trợ</a>
+    </nav>
 
-<!-- ═══ TOC ═══ -->
-<nav class="toc">
-  <h2>Mục lục</h2>
-  <ol>
-    <li><a href="#requirements">Yêu cầu hệ thống</a></li>
-    <li><a href="#prerequisites">Cài đặt prerequisites</a></li>
-    <li><a href="#install">Cài đặt dự án</a></li>
-    <li><a href="#start">Khởi động ứng dụng</a></li>
-    <li><a href="#models">Tải model</a></li>
-    <li><a href="#workflow">Workflow sau khi cài</a></li>
-    <li><a href="#gpu">Cấu hình GPU (tùy chọn)</a></li>
-    <li><a href="#build">Build standalone (tùy chọn)</a></li>
-    <li><a href="#troubleshooting">Khắc phục lỗi thường gặp</a></li>
-  </ol>
-</nav>
+    <section class="section" id="before">
+      <h2>1. Trước khi cài</h2>
+      <p>Máy cần có Internet trong lần cài đầu tiên để tải phần mềm và model. Sau khi tải đủ, app có thể chạy local trên máy.</p>
 
-<!-- ═══ 1. REQUIREMENTS ═══ -->
-<section class="section" id="requirements">
-  <h2>1. Yêu cầu hệ thống</h2>
-  <table>
-    <thead>
-      <tr><th>Thành phần</th><th>Tối thiểu</th><th>Khuyến nghị</th></tr>
-    </thead>
-    <tbody>
-      <tr><td><strong>OS</strong></td><td>Windows 10 / macOS 12+ / Ubuntu 20.04</td><td>Windows 11 / macOS 14+ / Ubuntu 22.04+</td></tr>
-      <tr><td><strong>CPU</strong></td><td>Intel i5 / Ryzen 5 / Apple M1</td><td>Intel i7+ / Ryzen 7+ / Apple M2+</td></tr>
-      <tr><td><strong>RAM</strong></td><td>8 GB</td><td>16 GB+</td></tr>
-      <tr><td><strong>GPU</strong></td><td>Không bắt buộc</td><td>NVIDIA 4GB+ VRAM hoặc Apple Silicon</td></tr>
-      <tr><td><strong>Python</strong></td><td>3.10+</td><td>3.12</td></tr>
-      <tr><td><strong>Node.js</strong></td><td>18+</td><td>20 LTS</td></tr>
-      <tr><td><strong>Dung lượng trống</strong></td><td>5 GB</td><td>10 GB (bao gồm model OmniVoice)</td></tr>
-    </tbody>
-  </table>
+      <table>
+        <thead>
+          <tr><th>Cần có</th><th>Dễ hiểu là gì?</th><th>Ghi chú</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Python</strong></td>
+            <td>Phần mềm để chạy backend AI.</td>
+            <td>Nên dùng Python 3.10 trở lên. Script sẽ dùng <code>uv</code> để quản lý môi trường.</td>
+          </tr>
+          <tr>
+            <td><strong>Node.js</strong></td>
+            <td>Phần mềm để chạy giao diện web.</td>
+            <td>Nên dùng Node.js 20 trở lên.</td>
+          </tr>
+          <tr>
+            <td><strong>eSpeak NG</strong></td>
+            <td>Thư viện hỗ trợ xử lý phát âm.</td>
+            <td>Script sẽ cố gắng tự cài. Nếu thiếu, app sẽ báo trong màn hình health.</td>
+          </tr>
+          <tr>
+            <td><strong>Model AI</strong></td>
+            <td>File nặng để tạo giọng nói.</td>
+            <td>Không nằm sẵn trong GitHub. App hoặc script sẽ tải khi bạn đồng ý.</td>
+          </tr>
+        </tbody>
+      </table>
 
-  <div class="box box-info">
-    <div class="box-title">Lưu ý về offline</div>
-    <p>Ứng dụng chạy local-first sau khi đã tải đủ model lần đầu. Internet chỉ cần thiết khi cài dependencies, tải model hoặc cập nhật từ GitHub.</p>
-  </div>
-
-  <div class="feature-grid">
-    <div class="feature-card">
-      <strong>VieNeu-TTS</strong>
-      <span>Engine chính cho giọng tiếng Việt, preset voice, pause marker, streaming và dialogue nhiều nhân vật.</span>
-    </div>
-    <div class="feature-card">
-      <strong>OmniVoice</strong>
-      <span>Engine đa ngôn ngữ cho voice design, voice clone và các ngôn ngữ Đông Nam Á đã cấu hình trong app.</span>
-    </div>
-    <div class="feature-card">
-      <strong>LoRA Adapter</strong>
-      <span>Tải và bật/tắt adapter giọng nói từ sidebar Studio khi dùng engine PyTorch.</span>
-    </div>
-    <div class="feature-card">
-      <strong>History & Export</strong>
-      <span>Lưu file WAV vào thư mục outputs, nghe lại trong app và tải về khi cần dùng cho video hoặc đào tạo.</span>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 2. PREREQUISITES ═══ -->
-<section class="section" id="prerequisites">
-  <h2>2. Cài đặt prerequisites</h2>
-
-  <h3>2.1. Python 3.10+</h3>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this, 'python')">Windows</button>
-    <button class="tab-btn" onclick="switchTab(this, 'python-mac')">macOS</button>
-    <button class="tab-btn" onclick="switchTab(this, 'python-linux')">Linux</button>
-  </div>
-  <div class="tab-content active" id="python">
-    <p>Tải installer tại <strong>https://www.python.org/downloads/</strong></p>
-    <div class="box box-warn">
-      <div class="box-title">Quan trọng</div>
-      <p>Khi cài, phải tick <strong>"Add Python to PATH"</strong> ở bước đầu tiên.</p>
-    </div>
-    <p>Kiểm tra sau khi cài:</p>
-    <div class="code-block">
-      <span class="label">CMD / PowerShell</span>
-      <span class="cmd">python</span> <span class="flag">--version</span><br/>
-      <span class="comment"># Mong đợi: Python 3.10.x trở lên</span>
-    </div>
-  </div>
-  <div class="tab-content" id="python-mac">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="comment"># Cài Homebrew (nếu chưa có)</span><br/>
-      <span class="cmd">/bin/bash</span> <span class="flag">-c</span> "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"<br/><br/>
-      <span class="comment"># Cài Python</span><br/>
-      <span class="cmd">brew</span> install python@3.12
-    </div>
-  </div>
-  <div class="tab-content" id="python-linux">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="comment"># Ubuntu / Debian</span><br/>
-      <span class="cmd">sudo</span> apt update && <span class="cmd">sudo</span> apt install <span class="flag">-y</span> python3.12 python3.12-venv python3-pip<br/><br/>
-      <span class="comment"># Fedora</span><br/>
-      <span class="cmd">sudo</span> dnf install <span class="flag">-y</span> python3.12
-    </div>
-  </div>
-
-  <h3>2.2. Node.js 18+</h3>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this, 'node-win')">Windows</button>
-    <button class="tab-btn" onclick="switchTab(this, 'node-mac')">macOS</button>
-    <button class="tab-btn" onclick="switchTab(this, 'node-linux')">Linux</button>
-  </div>
-  <div class="tab-content active" id="node-win">
-    <p>Tải LTS installer tại <strong>https://nodejs.org/</strong> (v20.x)</p>
-    <div class="code-block">
-      <span class="label">CMD / PowerShell</span>
-      <span class="cmd">node</span> <span class="flag">--version</span><br/>
-      <span class="comment"># Mong đợi: v20.x.x trở lên</span>
-    </div>
-  </div>
-  <div class="tab-content" id="node-mac">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="cmd">brew</span> install node@20
-    </div>
-  </div>
-  <div class="tab-content" id="node-linux">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="comment"># Ubuntu / Debian</span><br/>
-      <span class="cmd">curl</span> <span class="flag">-fsSL</span> https://deb.nodesource.com/setup_20.x | <span class="cmd">sudo</span> <span class="flag">-E</span> bash <span class="flag">-</span><br/>
-      <span class="cmd">sudo</span> apt install <span class="flag">-y</span> nodejs
-    </div>
-  </div>
-
-  <h3>2.3. eSpeak NG <span class="badge badge-required">Bắt buộc</span></h3>
-  <p>Thư viện phonemization — chuyển văn bản tiếng Việt thành phiên âm. Ứng dụng sẽ không hoạt động nếu thiếu.</p>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this, 'espeak-win')">Windows</button>
-    <button class="tab-btn" onclick="switchTab(this, 'espeak-mac')">macOS</button>
-    <button class="tab-btn" onclick="switchTab(this, 'espeak-linux')">Linux</button>
-  </div>
-  <div class="tab-content active" id="espeak-win">
-    <p>Tải MSI installer tại <strong>https://github.com/espeak-ng/espeak-ng/releases</strong></p>
-    <p>Chạy installer, để mặc định đường dẫn <code>C:\Program Files\eSpeak NG\</code></p>
-    <div class="box box-info">
-      <div class="box-title">Tự động</div>
-      <p><code>install.bat</code> sẽ tự động tải và cài eSpeak NG nếu chưa có.</p>
-    </div>
-  </div>
-  <div class="tab-content" id="espeak-mac">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="cmd">brew</span> install espeak-ng
-    </div>
-  </div>
-  <div class="tab-content" id="espeak-linux">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="comment"># Ubuntu / Debian</span><br/>
-      <span class="cmd">sudo</span> apt install <span class="flag">-y</span> espeak-ng<br/><br/>
-      <span class="comment"># Fedora</span><br/>
-      <span class="cmd">sudo</span> dnf install <span class="flag">-y</span> espeak-ng
-    </div>
-  </div>
-
-  <h3>2.4. uv (Astral) <span class="badge badge-auto">Script tự cài</span></h3>
-  <p>Trình quản lý Python package nhanh hơn pip. Script <code>install.bat</code> / <code>install.sh</code> sẽ tự động cài nếu chưa có.</p>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this, 'uv-win')">Windows</button>
-    <button class="tab-btn" onclick="switchTab(this, 'uv-mac')">macOS / Linux</button>
-  </div>
-  <div class="tab-content active" id="uv-win">
-    <div class="code-block">
-      <span class="label">PowerShell</span>
-      <span class="cmd">powershell</span> <span class="flag">-ExecutionPolicy Bypass -c</span> "irm https://astral.sh/uv/install.ps1 | iex"
-    </div>
-  </div>
-  <div class="tab-content" id="uv-mac">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="cmd">curl</span> <span class="flag">-LsSf</span> https://astral.sh/uv/install.sh | <span class="cmd">sh</span>
-    </div>
-  </div>
-</section>
-
-<!-- ═══ 3. INSTALL ═══ -->
-<section class="section" id="install">
-  <h2>3. Cài đặt dự án</h2>
-
-  <h3>Cách 1: Script tự động <span class="badge badge-required">Khuyến nghị</span></h3>
-  <p>Script sẽ tự động kiểm tra prerequisites, cài Python dependencies, Node dependencies, eSpeak NG và hỏi trước khi tải OmniVoice.</p>
-
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this, 'install-win')">Windows</button>
-    <button class="tab-btn" onclick="switchTab(this, 'install-mac')">macOS / Linux</button>
-  </div>
-  <div class="tab-content active" id="install-win">
-    <div class="code-block">
-      <span class="label">CMD</span>
-      <span class="comment">:: Clone dự án</span><br/>
-      <span class="cmd">git</span> clone https://github.com/chusaubanh/ThanhVinhStudio<br/>
-      <span class="cmd">cd</span> ThanhVinhStudio<br/><br/>
-      <span class="comment">:: Cài đặt dependencies, eSpeak NG và model tùy chọn</span><br/>
-      <span class="cmd">install.bat</span><br/><br/>
-      <span class="comment">:: Khởi động</span><br/>
-      <span class="cmd">start.bat</span>
-    </div>
-  </div>
-  <div class="tab-content" id="install-mac">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="comment"># Clone dự án</span><br/>
-      <span class="cmd">git</span> clone https://github.com/chusaubanh/ThanhVinhStudio<br/>
-      <span class="cmd">cd</span> ThanhVinhStudio<br/><br/>
-      <span class="comment"># Cấp quyền chạy script</span><br/>
-      <span class="cmd">chmod</span> +x install.sh start.sh<br/><br/>
-      <span class="comment"># Cài đặt tất cả</span><br/>
-      <span class="cmd">./install.sh</span><br/><br/>
-      <span class="comment"># Khởi động</span><br/>
-      <span class="cmd">./start.sh</span>
-    </div>
-  </div>
-
-  <h3>Cách 2: Cài thủ công</h3>
-  <p>Nếu script tự động gặp lỗi, bạn có thể cài từng bước:</p>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">
-      <h4>Clone dự án</h4>
-      <div class="code-block">
-        <span class="cmd">git</span> clone https://github.com/chusaubanh/ThanhVinhStudio<br/>
-        <span class="cmd">cd</span> ThanhVinhStudio
+      <div class="notice warn">
+        <strong>Lưu ý:</strong> Nếu Windows/macOS hỏi quyền chạy file, chọn cho phép. Đây là script cài đặt dependency cho project.
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">
-      <h4>Cài Python dependencies (Backend)</h4>
-      <div class="code-block">
-        <span class="cmd">uv</span> venv <span class="comment"># Tạo virtual environment</span><br/>
-        <span class="cmd">uv</span> sync&nbsp;&nbsp;<span class="comment"># Cài tất cả Python packages</span>
+    <section class="section" id="easy">
+      <h2>2. Cài nhanh theo hệ điều hành</h2>
+      <div class="cards">
+        <div class="card">
+          <h3>Windows</h3>
+          <p>Mở thư mục project, double-click theo thứ tự:</p>
+          <p><span class="button-name">install.bat</span></p>
+          <p><span class="button-name">start.bat</span></p>
+          <p>File <code>install.bat</code> sẽ cài dependency. File <code>start.bat</code> sẽ mở app.</p>
+        </div>
+
+        <div class="card">
+          <h3>macOS</h3>
+          <p>Mở thư mục project, double-click theo thứ tự:</p>
+          <p><span class="button-name">install.command</span></p>
+          <p><span class="button-name">start.command</span></p>
+          <p>Nếu macOS chặn file, mở Terminal trong thư mục project và chạy lệnh bên dưới.</p>
+          <div class="command">chmod +x install.command start.command repair.command install.sh start.sh repair.sh</div>
+        </div>
+
+        <div class="card">
+          <h3>Linux</h3>
+          <p>Mở Terminal trong thư mục project và chạy:</p>
+          <div class="command">chmod +x install.sh start.sh repair.sh<br/>./install.sh<br/>./start.sh</div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body">
-      <h4>Cài Node.js dependencies (Frontend)</h4>
-      <div class="code-block">
-        <span class="cmd">cd</span> frontend<br/>
-        <span class="cmd">npm</span> install<br/>
-        <span class="cmd">cd</span> ..
+      <div class="notice good">
+        <strong>Sau khi chạy thành công:</strong> trình duyệt sẽ mở tại <code>http://localhost:3000</code>. Backend chạy tại <code>http://localhost:8000</code>.
       </div>
-    </div>
-  </div>
+    </section>
 
-  <div class="step">
-    <div class="step-num">4</div>
-    <div class="step-body">
-      <h4>Tải model OmniVoice <span class="badge badge-optional">Tùy chọn</span></h4>
-      <p>Model OmniVoice (~1.5GB) cần cho tab OmniVoice, voice design, voice clone và TTS đa ngôn ngữ. Nếu chưa tải, VieNeu-TTS vẫn chạy bình thường.</p>
-      <div class="code-block">
-        <span class="cmd">uv</span> run python <span class="flag">-c</span> "from huggingface_hub import snapshot_download; snapshot_download('k2-fsa/OmniVoice', local_dir='models/omnivoice', ignore_patterns=['*.md','*.txt'])"
+    <section class="section" id="repair">
+      <h2>3. Khi bị lỗi lặt vặt</h2>
+      <p>Rất nhiều lỗi không phải do app hỏng, mà do lần chạy trước còn giữ port, thiếu dependency, hoặc Next.js còn file khóa. Hãy chạy repair trước.</p>
+
+      <div class="cards">
+        <div class="card">
+          <h3>Windows</h3>
+          <p>Double-click:</p>
+          <p><span class="button-name">repair.bat</span></p>
+          <p>Sau đó chạy lại <code>start.bat</code>.</p>
+        </div>
+        <div class="card">
+          <h3>macOS</h3>
+          <p>Double-click:</p>
+          <p><span class="button-name">repair.command</span></p>
+          <p>Sau đó chạy lại <code>start.command</code>.</p>
+        </div>
+        <div class="card">
+          <h3>Linux</h3>
+          <p>Chạy trong Terminal:</p>
+          <div class="command">./repair.sh<br/>./start.sh</div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <div class="step">
-    <div class="step-num">5</div>
-    <div class="step-body">
-      <h4>Khởi động ứng dụng</h4>
-      <div class="code-block">
-        <span class="comment"># Terminal 1 — Backend</span><br/>
-        <span class="cmd">uv</span> run python <span class="flag">-m</span> backend.main<br/><br/>
-        <span class="comment"># Terminal 2 — Frontend</span><br/>
-        <span class="cmd">cd</span> frontend && <span class="cmd">npm</span> run dev
+      <details>
+        <summary>Lỗi: port 3000 hoặc 8000 đang được sử dụng</summary>
+        <p>Nguyên nhân thường là app cũ chưa tắt hết. File repair sẽ tự tắt process đang chiếm port 3000, 3001 và 8000.</p>
+      </details>
+
+      <details>
+        <summary>Lỗi: Unable to acquire lock trong thư mục .next</summary>
+        <p>Đây là lỗi Next.js còn file khóa từ lần chạy trước. File repair sẽ xóa <code>frontend/.next/dev/lock</code> và cache dev liên quan.</p>
+      </details>
+
+      <details>
+        <summary>Lỗi: No module named 'vieneu'</summary>
+        <p>Python chưa cài đúng package tạo giọng. File repair sẽ cài lại <code>vieneu==2.7.0</code> và <code>sea-g2p==0.7.5</code>.</p>
+      </details>
+
+      <details>
+        <summary>Lỗi: Frontend dependencies not found</summary>
+        <p>Máy chưa có <code>frontend/node_modules</code>. Chạy install hoặc repair để cài lại bằng <code>npm ci</code>.</p>
+      </details>
+
+      <details>
+        <summary>Lỗi: thiếu model hoặc chưa tải model</summary>
+        <p>Model AI không lưu trong GitHub vì file lớn. Bạn có thể tải bằng nút trong app hoặc dùng <code>download.bat</code> trên Windows.</p>
+      </details>
+    </section>
+
+    <section class="section" id="daily">
+      <h2>4. Những lần sau mở app thế nào?</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="num">1</div>
+          <div>
+            <h3>Mở đúng file start</h3>
+            <p>Windows dùng <code>start.bat</code>, macOS dùng <code>start.command</code>, Linux dùng <code>./start.sh</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">2</div>
+          <div>
+            <h3>Đợi trình duyệt mở</h3>
+            <p>Script sẽ tự mở app. Nếu không tự mở, vào <code>http://localhost:3000</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="num">3</div>
+          <div>
+            <h3>Nếu lỗi, chạy repair</h3>
+            <p>Không cần xóa lung tung. Chạy file repair trước, sau đó chạy lại file start.</p>
+          </div>
+        </div>
       </div>
-      <p>Mở trình duyệt: <strong>http://localhost:3000</strong></p>
-    </div>
-  </div>
-</section>
+    </section>
 
-<!-- ═══ 4. START ═══ -->
-<section class="section" id="start">
-  <h2>4. Khởi động ứng dụng</h2>
+    <section class="section" id="support">
+      <h2>5. Phần cho người hỗ trợ kỹ thuật</h2>
+      <p>Phần này dành cho người cần kiểm tra sâu hơn bằng Terminal.</p>
 
-  <h3>Chế độ phát triển (dev)</h3>
-  <div class="tabs">
-    <button class="tab-btn active" onclick="switchTab(this, 'start-win')">Windows</button>
-    <button class="tab-btn" onclick="switchTab(this, 'start-mac')">macOS / Linux</button>
-  </div>
-  <div class="tab-content active" id="start-win">
-    <div class="code-block">
-      <span class="label">CMD</span>
-      <span class="cmd">start.bat</span>
-    </div>
-    <p>Script sẽ:</p>
-    <ul>
-      <li>Kill process cũ trên port 8000 (nếu có)</li>
-      <li>Khởi động backend tại <code>http://localhost:8000</code></li>
-      <li>Đợi backend sẵn sàng (tối đa 30s)</li>
-      <li>Khởi động frontend tại <code>http://localhost:3000</code></li>
-      <li>Tự động mở trình duyệt</li>
-    </ul>
-  </div>
-  <div class="tab-content" id="start-mac">
-    <div class="code-block">
-      <span class="label">Terminal</span>
-      <span class="cmd">./start.sh</span>
-    </div>
-  </div>
+      <details open>
+        <summary>Kiểm tra nhanh phần mềm hệ thống</summary>
+        <div class="command">git --version<br/>node --version<br/>npm --version<br/>python --version<br/>uv --version<br/>ffmpeg -version<br/>espeak-ng --version</div>
+      </details>
 
-  <h3>Chế độ production (static)</h3>
-  <p>Build frontend thành static files, backend FastAPI sẽ serve trực tiếp:</p>
-  <div class="code-block">
-    <span class="label">Terminal</span>
-    <span class="cmd">cd</span> frontend<br/>
-    <span class="cmd">npm</span> run build&nbsp;&nbsp;<span class="comment"># Tạo frontend/out/</span><br/>
-    <span class="cmd">cd</span> ..<br/>
-    <span class="cmd">uv</span> run python <span class="flag">-m</span> backend.main&nbsp;&nbsp;<span class="comment"># Serve tại http://localhost:8000</span>
-  </div>
-  <p>Mở <code>http://localhost:8000</code> — không cần chạy frontend dev server.</p>
-</section>
+      <details>
+        <summary>Setup thủ công backend</summary>
+        <div class="command">uv sync --frozen<br/>uv pip install --force-reinstall vieneu==2.7.0 sea-g2p==0.7.5<br/>uv run --frozen python -m backend.main</div>
+      </details>
 
-<!-- ═══ 5. MODELS ═══ -->
-<section class="section" id="models">
-  <h2>5. Tải model</h2>
+      <details>
+        <summary>Setup thủ công frontend</summary>
+        <div class="command">cd frontend<br/>npm ci --no-audit --no-fund<br/>npm run dev -- -p 3000 -H 127.0.0.1</div>
+      </details>
 
-  <h3>VieNeu-TTS (Base model)</h3>
-  <p>Model chính cho tổng hợp giọng nói tiếng Việt. Có thể tải qua UI hoặc command line:</p>
-  <div class="code-block">
-    <span class="label">Terminal</span>
-    <span class="comment"># Tải qua API</span><br/>
-    <span class="cmd">curl</span> <span class="flag">-X</span> POST http://localhost:8000/v1/download/base<br/><br/>
-    <span class="comment"># Kiểm tra tiến trình</span><br/>
-    <span class="cmd">curl</span> http://localhost:8000/v1/download/progress
-  </div>
+      <details>
+        <summary>Kiểm tra backend đang sống</summary>
+        <div class="command">curl http://localhost:8000/health<br/>curl http://localhost:8000/v1/status</div>
+      </details>
 
-  <h3>OmniVoice <span class="badge badge-optional">Tùy chọn</span></h3>
-  <p>Engine TTS 0.6B, hỗ trợ 600+ ngôn ngữ. Trong UI hiện đã ưu tiên các lựa chọn thường dùng của team: Vietnamese, English, Chinese, Japanese, Korean, French, German, Khmer, Indonesian, Thai, Malay, Singapore, Mexico và Bangladesh.</p>
-  <div class="code-block">
-    <span class="label">Terminal</span>
-    <span class="cmd">curl</span> <span class="flag">-X</span> POST http://localhost:8000/v1/download/omnivoice
-  </div>
-  <div class="pill-list">
-    <span class="pill">Vietnamese</span>
-    <span class="pill">Khmer</span>
-    <span class="pill">Indonesian</span>
-    <span class="pill">Thai</span>
-    <span class="pill">Malay</span>
-    <span class="pill">Singapore / English</span>
-    <span class="pill">Mexico / Spanish</span>
-    <span class="pill">Bangladesh / Bengali</span>
-  </div>
+      <div class="notice bad">
+        <strong>Không nên commit các thư mục/file này:</strong> <code>.venv</code>, <code>node_modules</code>, <code>.next</code>, <code>frontend/out</code>, <code>models</code>, <code>outputs</code>, file audio/video sinh ra, secret/API key.
+      </div>
+    </section>
+  </main>
 
-  <h3>LoRA Adapter <span class="badge badge-optional">Tùy chọn</span></h3>
-  <p>Adapter tinh chỉnh giọng nói cụ thể. Tải qua UI (sidebar Studio) hoặc command line:</p>
-  <div class="code-block">
-    <span class="label">Terminal</span>
-    <span class="cmd">curl</span> <span class="flag">-X</span> POST http://localhost:8000/v1/download/lora <span class="flag">-H</span> "Content-Type: application/json" <span class="flag">-d</span> '{"name": "ngoc-huyen"}'
-  </div>
-
-  <div class="box box-info">
-    <div class="box-title">Lưu ý</div>
-    <p>Sau khi tải xong, nhấn nút "Tải lại model" trong UI hoặc gọi <code>POST /v1/models/reload</code> để nạp model vào bộ nhớ.</p>
-  </div>
-</section>
-
-<!-- ═══ 6. WORKFLOW ═══ -->
-<section class="section" id="workflow">
-  <h2>6. Workflow sau khi cài</h2>
-
-  <div class="step">
-    <div class="step-num">1</div>
-    <div class="step-body">
-      <h4>Mở Studio và chọn engine</h4>
-      <p>Dùng <strong>GGUF</strong> cho máy CPU, <strong>PyTorch</strong> khi cần GPU/LoRA, hoặc <strong>Turbo</strong> khi ưu tiên tốc độ.</p>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-num">2</div>
-    <div class="step-body">
-      <h4>Tạo giọng tiếng Việt bằng VieNeu</h4>
-      <p>Nhập kịch bản, chọn preset voice, thêm pause marker nếu cần rồi nghe lại bằng player trước khi tải file WAV.</p>
-    </div>
-  </div>
-
-  <div class="step">
-    <div class="step-num">3</div>
-    <div class="step-body">
-      <h4>Dùng OmniVoice khi cần đa ngôn ngữ</h4>
-      <p>Load OmniVoice trong tab riêng, chọn ngôn ngữ, dùng voice design hoặc upload audio tham chiếu để clone giọng.</p>
-    </div>
-  </div>
-
-  <div class="box box-success">
-    <div class="box-title">Endpoint kiểm tra nhanh</div>
-    <p>Sau khi backend chạy, mở <code>http://localhost:8000/health</code> để xem model, CUDA, eSpeak, thư mục output và trạng thái OmniVoice.</p>
-  </div>
-</section>
-
-<!-- ═══ 6. GPU ═══ -->
-<section class="section" id="gpu">
-  <h2>7. Cấu hình GPU (tùy chọn)</h2>
-
-  <h3>NVIDIA GPU (CUDA)</h3>
-  <p>Để sử dụng engine PyTorch (GPU) cho chất lượng cao nhất và hỗ trợ LoRA:</p>
-  <ol>
-    <li>Cài NVIDIA Driver phiên bản 570.65+ (CUDA 12.8)</li>
-    <li>CUDA toolkit sẽ được cài tự động qua PyTorch</li>
-    <li>Trong UI, chọn engine <strong>PyTorch (GPU)</strong> ở sidebar Studio</li>
-  </ol>
-  <div class="code-block">
-    <span class="label">Kiểm tra CUDA</span>
-    <span class="cmd">uv</span> run python <span class="flag">-c</span> "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'No GPU')"
-  </div>
-
-  <h3>Apple Silicon (Metal)</h3>
-  <p>Trên macOS với chip M1/M2/M3, PyTorch sử dụng Metal Performance Shaders (MPS) tự động. Hiện tại OmniVoice hỗ trợ CPU trên macOS.</p>
-</section>
-
-<!-- ═══ 7. BUILD ═══ -->
-<section class="section" id="build">
-  <h2>8. Build standalone (tùy chọn)</h2>
-  <p>Đóng gói ứng dụng thành file .exe (Windows) hoặc ứng dụng macOS:</p>
-  <div class="code-block">
-    <span class="label">Terminal</span>
-    <span class="comment"># Build frontend trước</span><br/>
-    <span class="cmd">cd</span> frontend && <span class="cmd">npm</span> run build && <span class="cmd">cd</span> ..<br/><br/>
-    <span class="comment"># Build standalone app</span><br/>
-    <span class="cmd">uv</span> run python build.py
-  </div>
-  <p>Output: <code>dist/ThanhVinhStudio/</code> — thư mục chứa ứng dụng standalone.</p>
-
-  <div class="box box-info">
-    <div class="box-title">Yêu cầu build</div>
-    <p>Cần cài thêm: <code>pip install pywebview pyinstaller</code> (đã có trong <code>requirements-build.txt</code>)</p>
-  </div>
-</section>
-
-<!-- ═══ 8. TROUBLESHOOTING ═══ -->
-<section class="section" id="troubleshooting">
-  <h2>9. Khắc phục lỗi thường gặp</h2>
-
-  <h3>Lỗi: "vieneu package not found"</h3>
-  <div class="box box-error">
-    <div class="box-title">Nguyên nhân</div>
-    <p>Chưa cài đặt vieneu hoặc chưa kích hoạt virtual environment.</p>
-  </div>
-  <div class="code-block">
-    <span class="label">Giải pháp</span>
-    <span class="cmd">uv</span> sync&nbsp;&nbsp;<span class="comment"># Cài lại dependencies</span>
-  </div>
-
-  <h3>Lỗi: "cannot import name 'Normalizer' from 'sea_g2p'"</h3>
-  <div class="box box-error">
-    <div class="box-title">Nguyên nhân</div>
-    <p>Package <code>sea-g2p</code> bị cài thiếu wrapper Python, thường xảy ra khi môi trường ảo bị restore hoặc install bị ngắt giữa chừng.</p>
-  </div>
-  <div class="code-block">
-    <span class="label">Giải pháp</span>
-    <span class="cmd">uv</span> pip install <span class="flag">--force-reinstall</span> sea-g2p==0.7.5<br/>
-    <span class="cmd">uv</span> run python <span class="flag">-c</span> "from sea_g2p import Normalizer; print(Normalizer)"
-  </div>
-
-  <h3>Lỗi: "eSpeak NG not found"</h3>
-  <div class="box box-error">
-    <div class="box-title">Nguyên nhân</div>
-    <p>Chưa cài eSpeak NG hoặc chưa thêm vào PATH.</p>
-  </div>
-  <div class="code-block">
-    <span class="label">Windows — kiểm tra PATH</span>
-    <span class="cmd">where</span> espeak-ng<br/>
-    <span class="comment"># Nếu không thấy, thêm C:\Program Files\eSpeak NG\ vào PATH</span>
-  </div>
-
-  <h3>Lỗi: Port 8000 đã được sử dụng</h3>
-  <div class="code-block">
-    <span class="label">Windows — tìm và kill process</span>
-    <span class="cmd">netstat</span> <span class="flag">-aon</span> | <span class="cmd">findstr</span> :8000<br/>
-    <span class="cmd">taskkill</span> <span class="flag">/F /PID</span> &lt;PID&gt;<br/><br/>
-    <span class="label">macOS / Linux</span>
-    <span class="cmd">lsof</span> <span class="flag">-ti:8000</span> | <span class="cmd">xargs</span> kill
-  </div>
-
-  <h3>Lỗi: "Cross origin request detected"</h3>
-  <div class="box box-warn">
-    <div class="box-title">Đây là warning, không phải lỗi</div>
-    <p>Next.js cảnh báo khi frontend ở localhost:3000 gọi API ở localhost:8000. Đã được fix trong <code>next.config.ts</code> với <code>allowedDevOrigins</code>.</p>
-  </div>
-
-  <h3>Lỗi: "Method Not Allowed" khi gọi API</h3>
-  <div class="box box-error">
-    <div class="box-title">Nguyên nhân</div>
-    <p>Backend cũ chưa restart sau khi cập nhật code. Cần restart backend.</p>
-  </div>
-
-  <h3>Lỗi: npm install chậm hoặc timeout</h3>
-  <div class="code-block">
-    <span class="label">Giải pháp</span>
-    <span class="comment"># Dùng registry mirror (cho người dùng Việt Nam)</span><br/>
-    <span class="cmd">npm</span> config set registry https://registry.npmmirror.com<br/>
-    <span class="cmd">npm</span> install
-  </div>
-
-  <h3>Kiểm tra trạng thái hệ thống</h3>
-  <div class="code-block">
-    <span class="label">API</span>
-    <span class="comment"># Health check chi tiết (model, CUDA, eSpeak, output folder)</span><br/>
-    <span class="cmd">curl</span> http://localhost:8000/health<br/><br/>
-    <span class="comment"># Trạng thái model</span><br/>
-    <span class="cmd">curl</span> http://localhost:8000/v1/status
-  </div>
-</section>
-
-</div>
-
-<!-- ═══ FOOTER ═══ -->
-<footer class="footer">
-  <p>Thành Vinh Studio &mdash; Phòng Đào Tạo &mdash; Made with ❤️ by Sáu Bảnh</p>
-  <p style="margin-top: 8px;">
-    <a href="https://github.com/chusaubanh/ThanhVinhStudio" style="color: var(--accent); text-decoration: none;">GitHub</a>
-    &nbsp;&middot;&nbsp;
-    <a href="/studio" style="color: var(--accent); text-decoration: none;">Mở ứng dụng</a>
-  </p>
-</footer>
-
-<script>
-function switchTab(btn, tabId) {
-  const parent = btn.closest('.section') || btn.parentElement.parentElement;
-  const btns = btn.parentElement.querySelectorAll('.tab-btn');
-  btns.forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const contents = parent.querySelectorAll('.tab-content');
-  contents.forEach(c => c.classList.remove('active'));
-  document.getElementById(tabId).classList.add('active');
-}
-</script>
+  <footer class="footer">
+    Thành Vinh Studio - Hướng dẫn cài đặt local
+  </footer>
 </body>
 </html>
