@@ -25,7 +25,15 @@ from backend.utils.hardware import has_cuda
 
 def create_viener_engine(model_type: str = "gguf"):
     """Create a Vieneu TTS engine instance for the given model type."""
-    from vieneu import Vieneu
+    try:
+        from vieneu import Vieneu
+    except ModuleNotFoundError as exc:
+        if exc.name == "vieneu":
+            raise RuntimeError(
+                "Missing Python package 'vieneu'. Run repair.bat on Windows, "
+                "or ./repair.sh on macOS/Linux, then start the app again."
+            ) from exc
+        raise
 
     if model_type == "pytorch":
         return Vieneu(

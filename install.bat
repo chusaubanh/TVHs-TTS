@@ -154,10 +154,10 @@ if %errorlevel% neq 0 (
 )
 echo    Python dependencies installed.
 
-echo    Repairing known fragile dependency: sea-g2p...
-call uv pip install --force-reinstall sea-g2p==0.7.5
+echo    Repairing known fragile dependencies: vieneu and sea-g2p...
+call uv pip install --force-reinstall vieneu==2.7.0 sea-g2p==0.7.5
 if %errorlevel% neq 0 (
-    echo [ERROR] Failed to repair sea-g2p.
+    echo [ERROR] Failed to repair vieneu/sea-g2p.
     pause
     exit /b 1
 )

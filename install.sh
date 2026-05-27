@@ -73,8 +73,8 @@ fi
 echo "   Installing Python dependencies from uv.lock..."
 uv sync --frozen
 
-echo "   Repairing known fragile dependency: sea-g2p..."
-uv pip install --force-reinstall sea-g2p==0.7.5
+echo "   Repairing known fragile dependencies: vieneu and sea-g2p..."
+uv pip install --force-reinstall vieneu==2.7.0 sea-g2p==0.7.5
 
 echo "   Verifying Python imports..."
 uv run --frozen python -c "from sea_g2p import Normalizer; from vieneu import Vieneu; print('Python dependencies OK')"

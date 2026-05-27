@@ -49,9 +49,9 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-call uv pip install --force-reinstall sea-g2p==0.7.5
+call uv pip install --force-reinstall vieneu==2.7.0 sea-g2p==0.7.5
 if %errorlevel% neq 0 (
-    echo [ERROR] sea-g2p repair failed.
+    echo [ERROR] vieneu/sea-g2p repair failed.
     pause
     exit /b 1
 )

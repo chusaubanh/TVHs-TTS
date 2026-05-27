@@ -46,7 +46,7 @@ Workflow đề xuất:
 5. Trên macOS, ưu tiên install.command/start.command nếu người dùng muốn double-click; hoặc chmod +x install.sh start.sh repair.sh rồi chạy ./install.sh và ./start.sh.
 6. Trên Linux, chạy chmod +x install.sh start.sh repair.sh, sau đó ./install.sh và ./start.sh.
 7. Nếu setup thủ công:
-   - Backend: uv sync --frozen, uv pip install --force-reinstall sea-g2p==0.7.5, uv run --frozen python -m backend.main.
+   - Backend: uv sync --frozen, uv pip install --force-reinstall vieneu==2.7.0 sea-g2p==0.7.5, uv run --frozen python -m backend.main.
    - Frontend: cd frontend, npm ci --no-audit --no-fund, npm run dev -- -p 3000 -H 127.0.0.1.
 8. Nếu startup fail vì thiếu model/audio/output bị ignore, không tự khôi phục private assets. Hãy giải thích file nào thiếu và hỏi tôi trước khi tải model lớn.
 9. Nếu cần tạo .env, chỉ tạo placeholder, không ghi secret thật.
@@ -61,4 +61,3 @@ Ràng buộc:
 
 Hãy bắt đầu bằng cách liệt kê cấu trúc project phát hiện được, sau đó đề xuất chính xác các command setup cho máy của tôi.
 ```
-

@@ -23,7 +23,8 @@ async def lifespan(app):
     try:
         from vieneu import Vieneu
     except ImportError:
-        print("[WARNING] Vieneu package missing. Running in mock mode.")
+        print("[WARNING] Vieneu package missing.")
+        print("[WARNING] Run repair.bat on Windows, or ./repair.sh on macOS/Linux, then start again.")
         yield
         return
 

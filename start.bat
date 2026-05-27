@@ -32,6 +32,18 @@ if "%NEED_INSTALL%"=="1" (
     )
 )
 
+call uv run --frozen python -c "from vieneu import Vieneu; from sea_g2p import Normalizer" >nul 2>nul
+if errorlevel 1 (
+    echo [!] Python dependencies are incomplete. Running repair.bat now...
+    call "%ROOT%\repair.bat"
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] repair.bat failed. Please send the terminal output to support.
+        pause
+        exit /b 1
+    )
+)
+
 echo All prerequisites OK.
 echo.
 

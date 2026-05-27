@@ -55,6 +55,12 @@ if [ "$need_install" -eq 1 ]; then
     ./install.sh
 fi
 
+if ! uv run --frozen python -c "from vieneu import Vieneu; from sea_g2p import Normalizer" >/dev/null 2>&1; then
+    echo "  [!] Python dependencies are incomplete. Running ./repair.sh now..."
+    chmod +x ./repair.sh 2>/dev/null || true
+    ./repair.sh
+fi
+
 echo "All prerequisites OK."
 echo
 
