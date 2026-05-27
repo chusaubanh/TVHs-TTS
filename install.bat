@@ -2,16 +2,22 @@
 title ThanhVinh Studio - Installation
 color 0f
 cls
+setlocal EnableExtensions
+set "ROOT=%~dp0"
+set "ROOT=%ROOT:~0,-1%"
+set "UV_LINK_MODE=copy"
 
 echo ===================================================
 echo     ThanhVinh Studio - Installation
 echo ===================================================
 echo.
+echo Log tip: if installation fails, copy the full terminal output and send it to support.
+echo.
 
 :: ============================================================
 :: 1. Check / Install uv (Astral)
 :: ============================================================
-echo [1/6] Checking uv...
+echo [1/7] Checking uv...
 where uv >nul 2>nul
 if %errorlevel% neq 0 (
     echo    uv not found. Installing...
@@ -33,7 +39,7 @@ if %errorlevel% neq 0 (
 :: 2. Check / Install Node.js
 :: ============================================================
 echo.
-echo [2/6] Checking Node.js...
+echo [2/7] Checking Node.js...
 where node >nul 2>nul
 if %errorlevel% neq 0 (
     echo    Node.js not found.
@@ -72,7 +78,7 @@ if %errorlevel% neq 0 (
 :: 3. Check / Install eSpeak NG
 :: ============================================================
 echo.
-echo [3/6] Checking eSpeak NG...
+echo [3/7] Checking eSpeak NG...
 where espeak-ng >nul 2>nul
 if %errorlevel% neq 0 (
     :: Also check common install path
@@ -122,7 +128,7 @@ if %errorlevel% neq 0 (
 :: 4. Setup Python Environment (Backend)
 :: ============================================================
 echo.
-echo [4/6] Setting up Python Environment (Backend)...
+echo [4/7] Setting up Python Environment (Backend)...
 echo -------------------------------------------
 
 :: Create venv if not exists
@@ -139,8 +145,8 @@ if not exist ".venv" (
 )
 
 :: Install Python dependencies
-echo    Installing Python dependencies (this may take a few minutes)...
-call uv sync
+echo    Installing Python dependencies from uv.lock (this may take a few minutes)...
+call uv sync --frozen
 if %errorlevel% neq 0 (
     echo [ERROR] Failed to install Python dependencies.
     pause
@@ -148,34 +154,60 @@ if %errorlevel% neq 0 (
 )
 echo    Python dependencies installed.
 
+echo    Repairing known fragile dependency: sea-g2p...
+call uv pip install --force-reinstall sea-g2p==0.7.5
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to repair sea-g2p.
+    pause
+    exit /b 1
+)
+
+echo    Verifying Python imports...
+call uv run --frozen python -c "from sea_g2p import Normalizer; from vieneu import Vieneu; print('Python dependencies OK')"
+if %errorlevel% neq 0 (
+    echo [ERROR] Python dependency verification failed.
+    pause
+    exit /b 1
+)
+
 :: ============================================================
 :: 5. Setup Node.js Environment (Frontend)
 :: ============================================================
 echo.
-echo [5/6] Setting up Node.js Environment (Frontend)...
+echo [5/7] Setting up Node.js Environment (Frontend)...
 echo -------------------------------------------
 cd frontend
 
-if exist "node_modules" (
-    echo    node_modules found, skipping npm install.
-    echo    (Delete node_modules and run again if you have issues)
-) else (
-    echo    Installing Node.js dependencies...
-    call npm install
-    if %errorlevel% neq 0 (
-        echo [ERROR] Failed to install Node dependencies.
-        pause
-        exit /b 1
-    )
-    echo    Node.js dependencies installed.
+if exist ".next\dev\lock" (
+    echo    Removing stale Next.js lock file.
+    del /f /q ".next\dev\lock" >nul 2>nul
 )
+
+echo    Installing Node.js dependencies from package-lock.json...
+call npm ci --no-audit --no-fund
+if %errorlevel% neq 0 (
+    echo [ERROR] Failed to install Node dependencies.
+    cd ..
+    pause
+    exit /b 1
+)
+
+echo    Verifying frontend build...
+call npm run build
+if %errorlevel% neq 0 (
+    echo [ERROR] Frontend build failed.
+    cd ..
+    pause
+    exit /b 1
+)
+echo    Node.js dependencies installed and verified.
 cd ..
 
 :: ============================================================
 :: 6. Download OmniVoice Model
 :: ============================================================
 echo.
-echo [6/6] Downloading OmniVoice Model...
+echo [6/7] Downloading OmniVoice Model...
 echo -------------------------------------------
 echo    This will download the OmniVoice TTS model (~1.5GB).
 echo    You can skip this and download later from the app.
@@ -192,6 +224,18 @@ if exist "models\omnivoice" (
     ) else (
         echo    OmniVoice model downloaded.
     )
+)
+
+:: ============================================================
+:: 7. Final verification
+:: ============================================================
+echo.
+echo [7/7] Final verification...
+call uv run --frozen python -m compileall backend
+if %errorlevel% neq 0 (
+    echo [ERROR] Backend compile verification failed.
+    pause
+    exit /b 1
 )
 
 :: ============================================================

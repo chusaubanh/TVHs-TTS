@@ -68,6 +68,13 @@ install.bat    # Tự động cài uv, Node.js, eSpeak NG, Python & Node depende
 start.bat      # Khởi động ứng dụng
 ```
 
+Nếu gặp lỗi vặt khi chạy lại app như port 3000/8000 đang bận, Next.js lock file, thiếu `node_modules`, hoặc lỗi `sea_g2p.Normalizer`, chạy:
+
+```bash
+repair.bat
+start.bat
+```
+
 **macOS / Linux:**
 ```bash
 git clone https://github.com/chusaubanh/ThanhVinhStudio

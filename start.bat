@@ -1,107 +1,84 @@
 @echo off
+setlocal EnableExtensions EnableDelayedExpansion
 title ThanhVinh Studio
 color 0b
 cls
 
+set "ROOT=%~dp0"
+set "ROOT=%ROOT:~0,-1%"
+
 echo ===================================================
-echo     ThanhVinh Studio - v2.0
+echo     ThanhVinh Studio - Start
 echo ===================================================
 echo.
 
-:: Quick prerequisite check
 echo Checking prerequisites...
-set MISSING=0
+set "NEED_INSTALL=0"
 
-where uv >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [!] uv not found. Run install.bat first.
-    set MISSING=1
-)
+where uv >nul 2>nul || set "NEED_INSTALL=1"
+where node >nul 2>nul || set "NEED_INSTALL=1"
+if not exist "%ROOT%\.venv" set "NEED_INSTALL=1"
+if not exist "%ROOT%\frontend\node_modules" set "NEED_INSTALL=1"
 
-where node >nul 2>nul
-if %errorlevel% neq 0 (
-    echo [!] Node.js not found. Run install.bat first.
-    set MISSING=1
-)
-
-if not exist ".venv" (
-    echo [!] Virtual environment not found. Run install.bat first.
-    set MISSING=1
-)
-
-if not exist "frontend\node_modules" (
-    echo [!] Frontend dependencies not found. Run install.bat first.
-    set MISSING=1
-)
-
-if %MISSING% equ 1 (
+if "%NEED_INSTALL%"=="1" (
+    echo [!] Some dependencies are missing. Running install.bat now...
     echo.
-    echo Please run install.bat first to set up all dependencies.
-    pause
-    exit /b 1
+    call "%ROOT%\install.bat"
+    if errorlevel 1 (
+        echo.
+        echo [ERROR] install.bat failed. Please send install.log to support.
+        pause
+        exit /b 1
+    )
 )
 
 echo All prerequisites OK.
 echo.
 
-:: 0. Kill existing processes on port 8000
-echo [0/3] Cleaning up old processes...
-for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') do (
-    echo    Killing process %%a on port 8000
-    taskkill /F /PID %%a >nul 2>nul
-)
-timeout /t 1 /nobreak >nul
+echo [0/4] Cleaning old backend/frontend processes...
+call :KillPort 8000
+call :KillPort 3000
+call :KillPort 3001
 
-:: 1. Backend
-echo [1/3] Starting Backend Server...
-start "TV Studio Backend" cmd /k "cd /d "%~dp0" && uv run --frozen python -m backend.main"
-
-:: 2. Wait for backend to be ready
-echo [2/3] Waiting for backend to start...
-set MAX_WAIT=30
-set COUNT=0
-
-:WAIT_LOOP
-timeout /t 1 /nobreak >nul
-set /a COUNT+=1
-
-:: Check if backend is responding
-curl -s http://localhost:8000/health >nul 2>nul
-if %errorlevel% equ 0 (
-    echo    Backend is ready!
-    goto :BACKEND_OK
+if exist "%ROOT%\frontend\.next\dev\lock" (
+    echo    Removing stale Next.js lock file.
+    del /f /q "%ROOT%\frontend\.next\dev\lock" >nul 2>nul
 )
 
-if %COUNT% geq %MAX_WAIT% (
+if exist "%ROOT%\frontend\.next\dev" (
+    rmdir /s /q "%ROOT%\frontend\.next\dev" >nul 2>nul
+)
+
+timeout /t 1 /nobreak >nul
+
+echo [1/4] Starting Backend Server...
+start "TV Studio Backend" cmd /k "cd /d "%ROOT%" && uv run --frozen python -m backend.main"
+
+echo [2/4] Waiting for backend...
+call :WaitUrl "http://localhost:8000/health" 60
+if errorlevel 1 (
     echo.
-    echo [WARNING] Backend did not respond after %MAX_WAIT% seconds.
-    echo Check the "TV Studio Backend" window for errors.
-    echo.
-    echo Common issues:
-    echo   - Missing Python dependencies: run install.bat first
-    echo   - Port 8000 already in use
-    echo   - eSpeak NG not installed
-    echo.
+    echo [ERROR] Backend did not become ready.
+    echo Check the "TV Studio Backend" window for the exact error.
     pause
-    goto :START_FRONTEND
+    exit /b 1
 )
 
-echo    Waiting... (%COUNT%/%MAX_WAIT%)
-goto :WAIT_LOOP
+echo [3/4] Starting Frontend Server...
+start "TV Studio Frontend" cmd /k "cd /d "%ROOT%\frontend" && npm run dev -- -p 3000 -H 127.0.0.1"
 
-:BACKEND_OK
+echo [4/4] Waiting for frontend...
+call :WaitUrl "http://localhost:3000" 60
+if errorlevel 1 (
+    echo.
+    echo [ERROR] Frontend did not become ready.
+    echo If you see a Next.js lock error, close all old terminal windows and run start.bat again.
+    pause
+    exit /b 1
+)
 
-:: 3. Frontend
-:START_FRONTEND
-echo [3/3] Starting Frontend Server...
-cd frontend
-start "TV Studio Frontend" cmd /k "npm run dev"
-cd ..
-
-:: 4. Wait & Launch
 echo.
-echo Opening Browser in 5 seconds...
-timeout /t 5 /nobreak >nul
+echo Opening Browser...
 start http://localhost:3000
 
 echo.
@@ -110,5 +87,31 @@ echo   App is running!
 echo   - Frontend: http://localhost:3000
 echo   - Backend:  http://localhost:8000
 echo.
-echo   Close the terminal windows to stop.
+echo   Close the Backend and Frontend terminal windows to stop.
 echo ===================================================
+pause
+exit /b 0
+
+:KillPort
+set "PORT=%~1"
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr ":%PORT%" ^| findstr LISTENING') do (
+    echo    Killing process %%a on port %PORT%
+    taskkill /F /PID %%a >nul 2>nul
+)
+exit /b 0
+
+:WaitUrl
+set "URL=%~1"
+set "MAX_WAIT=%~2"
+set "COUNT=0"
+:WAIT_LOOP
+curl -s "%URL%" >nul 2>nul
+if %errorlevel% equ 0 (
+    echo    Ready: %URL%
+    exit /b 0
+)
+set /a COUNT+=1
+if %COUNT% geq %MAX_WAIT% exit /b 1
+echo    Waiting... (%COUNT%/%MAX_WAIT%)
+timeout /t 1 /nobreak >nul
+goto :WAIT_LOOP
