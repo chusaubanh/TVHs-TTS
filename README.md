@@ -84,6 +84,14 @@ chmod +x install.sh start.sh
 ./start.sh     # Khởi động ứng dụng
 ```
 
+Trên macOS có thể double-click file:
+
+```text
+install.command
+start.command
+repair.command
+```
+
 Nếu gặp lỗi vặt khi chạy lại app như port 3000/8000 đang bận, Next.js lock file, thiếu `node_modules`, hoặc lỗi `sea_g2p.Normalizer`, chạy:
 
 ```bash
