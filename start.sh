@@ -1,96 +1,105 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+
+kill_port() {
+    local port="$1"
+    if command -v lsof >/dev/null 2>&1; then
+        local pids
+        pids="$(lsof -ti :"$port" 2>/dev/null || true)"
+        if [ -n "$pids" ]; then
+            echo "   Killing process on port $port: $pids"
+            kill $pids 2>/dev/null || true
+            sleep 1
+            pids="$(lsof -ti :"$port" 2>/dev/null || true)"
+            [ -n "$pids" ] && kill -9 $pids 2>/dev/null || true
+        fi
+    elif command -v fuser >/dev/null 2>&1; then
+        fuser -k "${port}/tcp" 2>/dev/null || true
+    fi
+}
+
+wait_url() {
+    local url="$1"
+    local max_wait="$2"
+    local count=0
+    while [ "$count" -lt "$max_wait" ]; do
+        if curl -s "$url" >/dev/null 2>&1; then
+            echo "   Ready: $url"
+            return 0
+        fi
+        count=$((count + 1))
+        echo "   Waiting... ($count/$max_wait)"
+        sleep 1
+    done
+    return 1
+}
 
 echo "==================================================="
-echo "    ThanhVinh Studio"
+echo "    ThanhVinh Studio - Start"
 echo "==================================================="
 echo
 
-# Quick prerequisite check
 echo "Checking prerequisites..."
-MISSING=0
+need_install=0
+command -v uv >/dev/null 2>&1 || need_install=1
+command -v node >/dev/null 2>&1 || need_install=1
+[ -d ".venv" ] || need_install=1
+[ -d "frontend/node_modules" ] || need_install=1
 
-if ! command -v uv &>/dev/null; then
-    echo "  [!] uv not found. Run install.sh first."
-    MISSING=1
-fi
-
-if ! command -v node &>/dev/null; then
-    echo "  [!] Node.js not found. Run install.sh first."
-    MISSING=1
-fi
-
-if [ ! -d ".venv" ]; then
-    echo "  [!] Virtual environment not found. Run install.sh first."
-    MISSING=1
-fi
-
-if [ ! -d "frontend/node_modules" ]; then
-    echo "  [!] Frontend dependencies not found. Run install.sh first."
-    MISSING=1
-fi
-
-if [ "$MISSING" -ne 0 ]; then
-    echo
-    echo "Please run install.sh first to set up all dependencies."
-    exit 1
+if [ "$need_install" -eq 1 ]; then
+    echo "  [!] Some dependencies are missing. Running ./install.sh now..."
+    chmod +x ./install.sh 2>/dev/null || true
+    ./install.sh
 fi
 
 echo "All prerequisites OK."
 echo
 
-# 0. Kill existing processes on port 8000
-echo "[0/3] Cleaning up old processes..."
-if lsof -ti:8000 &>/dev/null; then
-    kill $(lsof -ti:8000) 2>/dev/null || true
-    echo "   Killed old process on port 8000"
-fi
-sleep 1
+echo "[0/4] Cleaning old backend/frontend processes..."
+kill_port 8000
+kill_port 3000
+kill_port 3001
 
-# 1. Backend
-echo "[1/3] Starting Backend Server..."
-cd "$(dirname "$0")"
+rm -f frontend/.next/dev/lock
+rm -rf frontend/.next/dev
+
+echo "[1/4] Starting Backend Server..."
 uv run --frozen python -m backend.main &
 BACKEND_PID=$!
-cd ..
 
-# 2. Wait for backend to be ready
-echo "[2/3] Waiting for backend to start..."
-MAX_WAIT=30
-COUNT=0
-
-while [ $COUNT -lt $MAX_WAIT ]; do
-    if curl -s http://localhost:8000/health > /dev/null 2>&1; then
-        echo "   Backend is ready!"
-        break
-    fi
-    sleep 1
-    COUNT=$((COUNT + 1))
-    echo "   Waiting... ($COUNT/$MAX_WAIT)"
-done
-
-if [ $COUNT -ge $MAX_WAIT ]; then
+echo "[2/4] Waiting for backend..."
+if ! wait_url "http://localhost:8000/health" 60; then
     echo
-    echo "  [WARNING] Backend did not respond after ${MAX_WAIT} seconds."
-    echo "  Check for errors in the backend output above."
+    echo "[ERROR] Backend did not become ready. Check terminal output above."
+    kill "$BACKEND_PID" 2>/dev/null || true
+    exit 1
 fi
 
-# 3. Frontend
-echo "[3/3] Starting Frontend Server..."
-cd frontend
-npm run dev &
+echo "[3/4] Starting Frontend Server..."
+(
+    cd frontend
+    npm run dev -- -p 3000 -H 127.0.0.1
+) &
 FRONTEND_PID=$!
-cd ..
 
-# 4. Wait & Launch
+echo "[4/4] Waiting for frontend..."
+if ! wait_url "http://localhost:3000" 60; then
+    echo
+    echo "[ERROR] Frontend did not become ready."
+    echo "Run ./repair.sh if you see Next.js lock or dependency errors."
+    kill "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+    exit 1
+fi
+
 echo
-echo "Opening Browser in 5 seconds..."
-sleep 5
-
-if [[ "$OSTYPE" == "darwin"* ]]; then
+echo "Opening Browser..."
+if [[ "${OSTYPE:-}" == "darwin"* ]]; then
     open http://localhost:3000
-elif command -v xdg-open &>/dev/null; then
-    xdg-open http://localhost:3000
+elif command -v xdg-open >/dev/null 2>&1; then
+    xdg-open http://localhost:3000 >/dev/null 2>&1 || true
 else
     echo "  Open http://localhost:3000 in your browser"
 fi
@@ -104,5 +113,8 @@ echo
 echo "  Press Ctrl+C to stop."
 echo "==================================================="
 
-# Wait for either process to exit
-wait $BACKEND_PID $FRONTEND_PID 2>/dev/null || true
+cleanup() {
+    kill "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true
+}
+trap cleanup EXIT INT TERM
+wait "$BACKEND_PID" "$FRONTEND_PID" 2>/dev/null || true

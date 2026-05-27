@@ -84,6 +84,14 @@ chmod +x install.sh start.sh
 ./start.sh     # Khởi động ứng dụng
 ```
 
+Nếu gặp lỗi vặt khi chạy lại app như port 3000/8000 đang bận, Next.js lock file, thiếu `node_modules`, hoặc lỗi `sea_g2p.Normalizer`, chạy:
+
+```bash
+chmod +x repair.sh
+./repair.sh
+./start.sh
+```
+
 > macOS: Cần cài [Homebrew](https://brew.sh/) trước để script tự động cài eSpeak NG.
 > Linux: Script hỗ trợ apt (Ubuntu/Debian) và dnf (Fedora).
 

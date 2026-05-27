@@ -1,67 +1,58 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$ROOT"
+export UV_LINK_MODE=copy
 
 echo "==================================================="
 echo "    ThanhVinh Studio - Installation"
 echo "==================================================="
 echo
+echo "If installation fails, copy the full terminal output and send it to support."
+echo
 
-# ============================================================
-# 1. Check / Install uv (Astral)
-# ============================================================
-echo "[1/6] Checking uv..."
-if ! command -v uv &>/dev/null; then
+echo "[1/7] Checking uv..."
+if ! command -v uv >/dev/null 2>&1; then
     echo "   uv not found. Installing..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"
-    echo "   uv installed successfully."
-else
-    echo "   uv found: $(uv --version)"
 fi
+echo "   uv: $(uv --version)"
 
-# ============================================================
-# 2. Check / Install Node.js
-# ============================================================
 echo
-echo "[2/6] Checking Node.js..."
-if ! command -v node &>/dev/null; then
+echo "[2/7] Checking Node.js..."
+if ! command -v node >/dev/null 2>&1; then
     echo "   Node.js not found."
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        if command -v brew &>/dev/null; then
-            echo "   Installing via Homebrew..."
-            brew install node@20
-        else
-            echo "   [ERROR] Please install Node.js from https://nodejs.org/"
-            exit 1
-        fi
+    if [[ "${OSTYPE:-}" == "darwin"* ]] && command -v brew >/dev/null 2>&1; then
+        echo "   Installing Node.js via Homebrew..."
+        brew install node@20 || brew install node
+        export PATH="/opt/homebrew/opt/node@20/bin:/usr/local/opt/node@20/bin:$PATH"
+    elif command -v apt-get >/dev/null 2>&1; then
+        echo "   Installing Node.js 20 via NodeSource..."
+        curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+        sudo apt-get install -y nodejs
+    elif command -v dnf >/dev/null 2>&1; then
+        echo "   Installing Node.js via dnf..."
+        sudo dnf install -y nodejs npm
     else
-        echo "   [ERROR] Please install Node.js from https://nodejs.org/"
-        echo "   Or use: curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt install -y nodejs"
+        echo "   [ERROR] Please install Node.js 20+ from https://nodejs.org/"
         exit 1
     fi
-else
-    echo "   Node.js found: $(node --version)"
 fi
+echo "   node: $(node --version)"
+echo "   npm:  $(npm --version)"
 
-# ============================================================
-# 3. Check / Install eSpeak NG
-# ============================================================
 echo
-echo "[3/6] Checking eSpeak NG..."
-if ! command -v espeak-ng &>/dev/null; then
+echo "[3/7] Checking eSpeak NG..."
+if ! command -v espeak-ng >/dev/null 2>&1; then
     echo "   eSpeak NG not found."
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        if command -v brew &>/dev/null; then
-            echo "   Installing via Homebrew..."
-            brew install espeak-ng
-        else
-            echo "   [WARNING] Please install Homebrew first, then: brew install espeak-ng"
-        fi
-    elif command -v apt-get &>/dev/null; then
-        echo "   Installing via apt..."
-        sudo apt-get update && sudo apt-get install -y espeak-ng
-    elif command -v dnf &>/dev/null; then
-        echo "   Installing via dnf..."
+    if [[ "${OSTYPE:-}" == "darwin"* ]] && command -v brew >/dev/null 2>&1; then
+        brew install espeak-ng
+    elif command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get update
+        sudo apt-get install -y espeak-ng
+    elif command -v dnf >/dev/null 2>&1; then
         sudo dnf install -y espeak-ng
     else
         echo "   [WARNING] Please install eSpeak NG manually:"
@@ -71,79 +62,61 @@ else
     echo "   eSpeak NG found."
 fi
 
-# ============================================================
-# 4. Setup Python Environment (Backend)
-# ============================================================
 echo
-echo "[4/6] Setting up Python Environment (Backend)..."
-echo "-------------------------------------------"
-
+echo "[4/7] Setting up Python environment..."
 if [ ! -d ".venv" ]; then
-    echo "   Creating virtual environment..."
     uv venv
 else
     echo "   Virtual environment already exists."
 fi
 
-echo "   Installing Python dependencies (this may take a few minutes)..."
-uv sync
-echo "   Python dependencies installed."
+echo "   Installing Python dependencies from uv.lock..."
+uv sync --frozen
 
-# ============================================================
-# 5. Setup Node.js Environment (Frontend)
-# ============================================================
+echo "   Repairing known fragile dependency: sea-g2p..."
+uv pip install --force-reinstall sea-g2p==0.7.5
+
+echo "   Verifying Python imports..."
+uv run --frozen python -c "from sea_g2p import Normalizer; from vieneu import Vieneu; print('Python dependencies OK')"
+
 echo
-echo "[5/6] Setting up Node.js Environment (Frontend)..."
-echo "-------------------------------------------"
-cd frontend
+echo "[5/7] Setting up frontend dependencies..."
+rm -f frontend/.next/dev/lock
+rm -rf frontend/.next/dev
+(
+    cd frontend
+    npm ci --no-audit --no-fund
+    npm run build
+)
 
-if [ -d "node_modules" ]; then
-    echo "   node_modules found, skipping npm install."
-    echo "   (Delete node_modules and run again if you have issues)"
-else
-    echo "   Installing Node.js dependencies..."
-    npm install
-    echo "   Node.js dependencies installed."
-fi
-cd ..
-
-# ============================================================
-# 6. Download OmniVoice Model
-# ============================================================
 echo
-echo "[6/6] Downloading OmniVoice Model..."
-echo "-------------------------------------------"
-echo "   This will download the OmniVoice TTS model (~1.5GB)."
-echo "   You can skip this and download later from the app."
-echo
-
+echo "[6/7] Downloading OmniVoice model..."
+echo "   This is optional and large (~1.5GB)."
 if [ -d "models/omnivoice" ] && [ "$(ls -A models/omnivoice 2>/dev/null)" ]; then
     echo "   OmniVoice model already exists, skipping."
 else
-    echo "   Downloading OmniVoice from HuggingFace..."
-    uv run python -c "from huggingface_hub import snapshot_download; snapshot_download('k2-fsa/OmniVoice', local_dir='models/omnivoice', ignore_patterns=['*.md','*.txt'])" || {
-        echo "   [WARNING] Failed to download OmniVoice model."
-        echo "   You can download it later from the app (OmniVoice tab)."
-    }
+    printf "   Download OmniVoice now? [y/N]: "
+    read -r answer
+    case "$answer" in
+        y|Y|yes|YES)
+            uv run --frozen python -c "from huggingface_hub import snapshot_download; snapshot_download('k2-fsa/OmniVoice', local_dir='models/omnivoice', ignore_patterns=['*.md','*.txt'])" || {
+                echo "   [WARNING] Failed to download OmniVoice. You can retry later from the app."
+            }
+            ;;
+        *)
+            echo "   Skipped OmniVoice download."
+            ;;
+    esac
 fi
 
-# ============================================================
-# Done
-# ============================================================
+echo
+echo "[7/7] Final backend verification..."
+uv run --frozen python -m compileall backend
+
 echo
 echo "==================================================="
 echo "    Installation Complete!"
 echo
-echo '    Run "./start.sh" to launch the application.'
-echo
-echo "    Prerequisites installed:"
-echo "      - uv (Python package manager)"
-echo "      - Node.js + npm"
-echo "      - eSpeak NG (phonemization)"
-echo "      - Python dependencies"
-echo "      - Node.js dependencies"
-echo "      - OmniVoice model (optional)"
-echo
-echo "    NOTE: After installation, the app runs fully offline."
-echo "    Internet is only needed for the initial model download."
+echo "    Run ./start.sh to launch the application."
+echo "    If anything gets stuck later, run ./repair.sh."
 echo "==================================================="
