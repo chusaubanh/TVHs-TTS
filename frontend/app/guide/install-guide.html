@@ -242,6 +242,44 @@
     .badge-optional { background: rgba(59,130,246,0.15); color: #3b82f6; }
     .badge-auto { background: rgba(34,197,94,0.15); color: var(--success); }
 
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 18px 0 28px;
+    }
+    .feature-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.035), rgba(255,255,255,0.012));
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .feature-card strong {
+      display: block;
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    .feature-card span {
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    .pill-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 14px 0 4px;
+    }
+    .pill {
+      border: 1px solid rgba(197,160,89,0.28);
+      border-radius: 999px;
+      background: rgba(197,160,89,0.08);
+      color: var(--accent-light);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 10px;
+    }
+
     /* Footer */
     .footer {
       text-align: center;
@@ -257,6 +295,7 @@
       .hero h1 { font-size: 22px; }
       .container { padding: 24px 16px 60px; }
       .step { flex-direction: column; gap: 8px; }
+      .feature-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -266,7 +305,7 @@
 <header class="hero">
   <img src="https://w.ladicdn.com/s400x400/5c7362c6c417ab07e5196b05/logo-1-20240518015947-i31s7.jpg" alt="Logo" class="hero-logo" />
   <h1>Thành Vinh Studio</h1>
-  <p>Hướng dẫn cài đặt chi tiết — Windows, macOS, Linux</p>
+  <p>Hướng dẫn cài đặt cho studio tạo giọng offline: VieNeu-TTS, OmniVoice, LoRA và voice clone</p>
 </header>
 
 <div class="container">
@@ -280,6 +319,7 @@
     <li><a href="#install">Cài đặt dự án</a></li>
     <li><a href="#start">Khởi động ứng dụng</a></li>
     <li><a href="#models">Tải model</a></li>
+    <li><a href="#workflow">Workflow sau khi cài</a></li>
     <li><a href="#gpu">Cấu hình GPU (tùy chọn)</a></li>
     <li><a href="#build">Build standalone (tùy chọn)</a></li>
     <li><a href="#troubleshooting">Khắc phục lỗi thường gặp</a></li>
@@ -306,7 +346,26 @@
 
   <div class="box box-info">
     <div class="box-title">Lưu ý về offline</div>
-    <p>Ứng dụng chạy hoàn toàn offline sau khi đã tải đủ model lần đầu. Internet chỉ cần thiết khi cài đặt và tải model.</p>
+    <p>Ứng dụng chạy local-first sau khi đã tải đủ model lần đầu. Internet chỉ cần thiết khi cài dependencies, tải model hoặc cập nhật từ GitHub.</p>
+  </div>
+
+  <div class="feature-grid">
+    <div class="feature-card">
+      <strong>VieNeu-TTS</strong>
+      <span>Engine chính cho giọng tiếng Việt, preset voice, pause marker, streaming và dialogue nhiều nhân vật.</span>
+    </div>
+    <div class="feature-card">
+      <strong>OmniVoice</strong>
+      <span>Engine đa ngôn ngữ cho voice design, voice clone và các ngôn ngữ Đông Nam Á đã cấu hình trong app.</span>
+    </div>
+    <div class="feature-card">
+      <strong>LoRA Adapter</strong>
+      <span>Tải và bật/tắt adapter giọng nói từ sidebar Studio khi dùng engine PyTorch.</span>
+    </div>
+    <div class="feature-card">
+      <strong>History & Export</strong>
+      <span>Lưu file WAV vào thư mục outputs, nghe lại trong app và tải về khi cần dùng cho video hoặc đào tạo.</span>
+    </div>
   </div>
 </section>
 
@@ -437,7 +496,7 @@
   <h2>3. Cài đặt dự án</h2>
 
   <h3>Cách 1: Script tự động <span class="badge badge-required">Khuyến nghị</span></h3>
-  <p>Script sẽ tự động kiểm tra và cài đặt tất cả prerequisites, Python dependencies, Node dependencies, và tải model OmniVoice.</p>
+  <p>Script sẽ tự động kiểm tra prerequisites, cài Python dependencies, Node dependencies, eSpeak NG và hỏi trước khi tải OmniVoice.</p>
 
   <div class="tabs">
     <button class="tab-btn active" onclick="switchTab(this, 'install-win')">Windows</button>
@@ -449,7 +508,7 @@
       <span class="comment">:: Clone dự án</span><br/>
       <span class="cmd">git</span> clone https://github.com/chusaubanh/ThanhVinhStudio<br/>
       <span class="cmd">cd</span> ThanhVinhStudio<br/><br/>
-      <span class="comment">:: Cài đặt tất cả (Python, Node, eSpeak, model)</span><br/>
+      <span class="comment">:: Cài đặt dependencies, eSpeak NG và model tùy chọn</span><br/>
       <span class="cmd">install.bat</span><br/><br/>
       <span class="comment">:: Khởi động</span><br/>
       <span class="cmd">start.bat</span>
@@ -511,7 +570,7 @@
     <div class="step-num">4</div>
     <div class="step-body">
       <h4>Tải model OmniVoice <span class="badge badge-optional">Tùy chọn</span></h4>
-      <p>Model OmniVoice (~1.5GB) cần thiết cho engine OmniVoice TTS. Nếu không tải, bạn vẫn dùng được VieNeu-TTS bình thường.</p>
+      <p>Model OmniVoice (~1.5GB) cần cho tab OmniVoice, voice design, voice clone và TTS đa ngôn ngữ. Nếu chưa tải, VieNeu-TTS vẫn chạy bình thường.</p>
       <div class="code-block">
         <span class="cmd">uv</span> run python <span class="flag">-c</span> "from huggingface_hub import snapshot_download; snapshot_download('k2-fsa/OmniVoice', local_dir='models/omnivoice', ignore_patterns=['*.md','*.txt'])"
       </div>
@@ -590,10 +649,20 @@
   </div>
 
   <h3>OmniVoice <span class="badge badge-optional">Tùy chọn</span></h3>
-  <p>Engine TTS 0.6B, hỗ trợ 600+ ngôn ngữ. Tải qua UI (tab OmniVoice) hoặc command line:</p>
+  <p>Engine TTS 0.6B, hỗ trợ 600+ ngôn ngữ. Trong UI hiện đã ưu tiên các lựa chọn thường dùng của team: Vietnamese, English, Chinese, Japanese, Korean, French, German, Khmer, Indonesian, Thai, Malay, Singapore, Mexico và Bangladesh.</p>
   <div class="code-block">
     <span class="label">Terminal</span>
     <span class="cmd">curl</span> <span class="flag">-X</span> POST http://localhost:8000/v1/download/omnivoice
+  </div>
+  <div class="pill-list">
+    <span class="pill">Vietnamese</span>
+    <span class="pill">Khmer</span>
+    <span class="pill">Indonesian</span>
+    <span class="pill">Thai</span>
+    <span class="pill">Malay</span>
+    <span class="pill">Singapore / English</span>
+    <span class="pill">Mexico / Spanish</span>
+    <span class="pill">Bangladesh / Bengali</span>
   </div>
 
   <h3>LoRA Adapter <span class="badge badge-optional">Tùy chọn</span></h3>
@@ -609,9 +678,43 @@
   </div>
 </section>
 
+<!-- ═══ 6. WORKFLOW ═══ -->
+<section class="section" id="workflow">
+  <h2>6. Workflow sau khi cài</h2>
+
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body">
+      <h4>Mở Studio và chọn engine</h4>
+      <p>Dùng <strong>GGUF</strong> cho máy CPU, <strong>PyTorch</strong> khi cần GPU/LoRA, hoặc <strong>Turbo</strong> khi ưu tiên tốc độ.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body">
+      <h4>Tạo giọng tiếng Việt bằng VieNeu</h4>
+      <p>Nhập kịch bản, chọn preset voice, thêm pause marker nếu cần rồi nghe lại bằng player trước khi tải file WAV.</p>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body">
+      <h4>Dùng OmniVoice khi cần đa ngôn ngữ</h4>
+      <p>Load OmniVoice trong tab riêng, chọn ngôn ngữ, dùng voice design hoặc upload audio tham chiếu để clone giọng.</p>
+    </div>
+  </div>
+
+  <div class="box box-success">
+    <div class="box-title">Endpoint kiểm tra nhanh</div>
+    <p>Sau khi backend chạy, mở <code>http://localhost:8000/health</code> để xem model, CUDA, eSpeak, thư mục output và trạng thái OmniVoice.</p>
+  </div>
+</section>
+
 <!-- ═══ 6. GPU ═══ -->
 <section class="section" id="gpu">
-  <h2>6. Cấu hình GPU (tùy chọn)</h2>
+  <h2>7. Cấu hình GPU (tùy chọn)</h2>
 
   <h3>NVIDIA GPU (CUDA)</h3>
   <p>Để sử dụng engine PyTorch (GPU) cho chất lượng cao nhất và hỗ trợ LoRA:</p>
@@ -631,7 +734,7 @@
 
 <!-- ═══ 7. BUILD ═══ -->
 <section class="section" id="build">
-  <h2>7. Build standalone (tùy chọn)</h2>
+  <h2>8. Build standalone (tùy chọn)</h2>
   <p>Đóng gói ứng dụng thành file .exe (Windows) hoặc ứng dụng macOS:</p>
   <div class="code-block">
     <span class="label">Terminal</span>
@@ -650,7 +753,7 @@
 
 <!-- ═══ 8. TROUBLESHOOTING ═══ -->
 <section class="section" id="troubleshooting">
-  <h2>8. Khắc phục lỗi thường gặp</h2>
+  <h2>9. Khắc phục lỗi thường gặp</h2>
 
   <h3>Lỗi: "vieneu package not found"</h3>
   <div class="box box-error">
@@ -660,6 +763,17 @@
   <div class="code-block">
     <span class="label">Giải pháp</span>
     <span class="cmd">uv</span> sync&nbsp;&nbsp;<span class="comment"># Cài lại dependencies</span>
+  </div>
+
+  <h3>Lỗi: "cannot import name 'Normalizer' from 'sea_g2p'"</h3>
+  <div class="box box-error">
+    <div class="box-title">Nguyên nhân</div>
+    <p>Package <code>sea-g2p</code> bị cài thiếu wrapper Python, thường xảy ra khi môi trường ảo bị restore hoặc install bị ngắt giữa chừng.</p>
+  </div>
+  <div class="code-block">
+    <span class="label">Giải pháp</span>
+    <span class="cmd">uv</span> pip install <span class="flag">--force-reinstall</span> sea-g2p==0.7.5<br/>
+    <span class="cmd">uv</span> run python <span class="flag">-c</span> "from sea_g2p import Normalizer; print(Normalizer)"
   </div>
 
   <h3>Lỗi: "eSpeak NG not found"</h3>

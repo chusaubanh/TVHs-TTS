@@ -29,7 +29,7 @@ async def unload_omnivoice():
 @router.get("/v1/omnivoice/status")
 async def omnivoice_status():
     """Check OmniVoice model status."""
-    from backend.helpers import has_cuda
+    from backend.utils.hardware import has_cuda
     return {"loaded": state.omnivoice_loaded, "has_cuda": has_cuda()}
 
 
@@ -43,6 +43,7 @@ async def omnivoice_tts_generate(request: OmniVoiceTTSRequest):
             language=request.language,
             speed=request.speed,
             voice_name=request.voice_name,
+            instruct=request.instruct,
         )
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
@@ -54,7 +55,7 @@ async def omnivoice_tts_generate(request: OmniVoiceTTSRequest):
 async def omnivoice_clone(
     text: str = Form(...),
     reference_audio: UploadFile = File(...),
-    language: str = Form(default="vie"),
+    language: str = Form(default="Vietnamese"),
     speed: float = Form(default=1.0),
     save_as: str = Form(default=""),
 ):
@@ -76,7 +77,7 @@ async def list_omnivoice_voices():
 async def save_omnivoice_voice(
     name: str = Form(...),
     reference_audio: UploadFile = File(...),
-    language: str = Form(default="vie"),
+    language: str = Form(default="Vietnamese"),
 ):
     """Save a voice from reference audio for reuse."""
     if not name.strip():

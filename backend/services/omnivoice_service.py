@@ -8,10 +8,15 @@ from pathlib import Path
 
 from backend.config import LOCAL_OMNIVOICE_DIR, REMOTE_OMNIVOICE_REPO, OUTPUTS_DIR, SAVED_VOICES_DIR
 from backend.state import state
-from backend.helpers import (
-    is_omnivoice_downloaded, has_cuda, audio_to_response,
-    normalize_audio, unpack_audio_result, save_upload_to_tempfile,
+from backend.utils.audio import (
+    audio_to_response,
+    normalize_audio,
+    save_upload_to_tempfile,
+    unpack_audio_result,
 )
+from backend.utils.files import is_omnivoice_downloaded
+from backend.utils.hardware import has_cuda
+from backend.utils.languages import normalize_omnivoice_language
 
 import soundfile as sf
 
@@ -59,8 +64,9 @@ def unload_omnivoice() -> dict:
     return {"status": "ok"}
 
 
-def generate_tts(text: str, language: str = "vie", speed: float = 1.0, voice_name: str | None = None):
+def generate_tts(text: str, language: str = "vie", speed: float = 1.0, voice_name: str | None = None, instruct: str | None = None):
     """Generate speech with OmniVoice. If voice_name is set, use saved reference audio."""
+    language = normalize_omnivoice_language(language)
     if voice_name:
         voice_dir = SAVED_VOICES_DIR / voice_name
         meta_path = voice_dir / "meta.json"
@@ -72,15 +78,22 @@ def generate_tts(text: str, language: str = "vie", speed: float = 1.0, voice_nam
             raise FileNotFoundError("Reference audio not found for this voice")
 
         with state.omnivoice_lock:
-            result = state.omnivoice_tts.clone(
-                text=text, reference_audio=str(ref_audio),
-                language=language, speed=speed,
-            )
+            voice_clone_prompt = state.omnivoice_tts.create_voice_clone_prompt(ref_audio=str(ref_audio))
+            kwargs = {
+                "text": text,
+                "voice_clone_prompt": voice_clone_prompt,
+                "language": language,
+                "speed": speed,
+            }
+            if instruct:
+                kwargs["instruct"] = instruct
+            result = state.omnivoice_tts.generate(**kwargs)
     else:
+        kwargs = {"text": text, "language": language, "speed": speed}
+        if instruct:
+            kwargs["instruct"] = instruct
         with state.omnivoice_lock:
-            result = state.omnivoice_tts.generate(
-                text=text, language=language, speed=speed,
-            )
+            result = state.omnivoice_tts.generate(**kwargs)
 
     audio_data, sample_rate = unpack_audio_result(result, state.omnivoice_tts)
     audio_data = normalize_audio(audio_data)
@@ -95,12 +108,15 @@ def generate_tts(text: str, language: str = "vie", speed: float = 1.0, voice_nam
 
 def generate_clone(text: str, reference_audio, language: str = "vie", speed: float = 1.0, save_as: str = ""):
     """Voice clone with OmniVoice. If save_as is provided, save the voice for reuse."""
+    language = normalize_omnivoice_language(language)
     tmp_path = save_upload_to_tempfile(reference_audio)
 
     try:
         with state.omnivoice_lock:
-            result = state.omnivoice_tts.clone(
-                text=text, reference_audio=tmp_path,
+            voice_clone_prompt = state.omnivoice_tts.create_voice_clone_prompt(ref_audio=tmp_path)
+            result = state.omnivoice_tts.generate(
+                text=text,
+                voice_clone_prompt=voice_clone_prompt,
                 language=language, speed=speed,
             )
 
@@ -124,6 +140,7 @@ def generate_clone(text: str, reference_audio, language: str = "vie", speed: flo
 
 def _save_voice(voice_name: str, ref_audio_path: str, language: str):
     """Save a cloned voice for reuse."""
+    language = normalize_omnivoice_language(language)
     voice_dir = SAVED_VOICES_DIR / voice_name
     voice_dir.mkdir(parents=True, exist_ok=True)
 
@@ -144,13 +161,13 @@ def list_saved_voices() -> list[dict]:
     voices = []
     if not SAVED_VOICES_DIR.exists():
         return voices
-    for meta_file in sorted(SAVED_VOICES_DIR.glob("*.json")):
+    for meta_file in sorted(SAVED_VOICES_DIR.glob("*/meta.json")):
         try:
             meta = json.loads(meta_file.read_text(encoding="utf-8"))
-            audio_path = SAVED_VOICES_DIR / meta.get("audio_file", "")
+            audio_path = meta_file.parent / meta.get("audio_file", "")
             if audio_path.exists():
                 voices.append({
-                    "name": meta.get("name", meta_file.stem),
+                    "name": meta.get("name", meta_file.parent.name),
                     "language": meta.get("language", "vie"),
                     "created": meta.get("created", ""),
                     "audio_file": meta.get("audio_file", ""),
@@ -171,6 +188,7 @@ def delete_saved_voice(name: str) -> bool:
 
 async def save_voice_from_upload(name: str, reference_audio, language: str) -> dict:
     """Save a voice from uploaded reference audio."""
+    language = normalize_omnivoice_language(language)
     voice_name = name.strip()
     voice_dir = SAVED_VOICES_DIR / voice_name
     if voice_dir.exists():

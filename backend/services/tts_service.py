@@ -5,8 +5,10 @@ import os
 import numpy as np
 
 from backend.state import state
-from backend.helpers import (
-    save_audio_to_disk, audio_to_response, generate_audio_with_pause,
+from backend.utils.audio import (
+    audio_to_response,
+    generate_audio_with_pause,
+    save_audio_to_disk,
     save_upload_to_tempfile,
 )
 from backend.config import NEUTRAL_EMOTION_TAG, DEFAULT_TEMPERATURE
