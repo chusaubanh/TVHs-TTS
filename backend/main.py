@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
 from backend.config import (
-    OUTPUTS_DIR, APP_TITLE, APP_VERSION, DEFAULT_HOST, DEFAULT_PORT, ALLOWED_ORIGINS,
+    APP_TITLE, APP_VERSION, DEFAULT_HOST, DEFAULT_PORT, ALLOWED_ORIGINS, get_outputs_dir,
 )
 from backend.state import state
 from backend.helpers import is_base_model_downloaded, create_viener_engine
@@ -20,20 +20,20 @@ async def lifespan(app):
     print("Starting ThanhVinhStudio v4.0 (VieNeu-TTS-v2)...")
     print("=" * 50)
 
-    try:
-        from vieneu import Vieneu
-    except ImportError:
-        print("[WARNING] Vieneu package missing.")
-        print("[WARNING] Run repair.bat on Windows, or ./repair.sh on macOS/Linux, then start again.")
-        yield
-        return
-
     if is_base_model_downloaded():
+        try:
+            from vieneu import Vieneu  # noqa: F401
+        except ImportError:
+            print("[WARNING] Vieneu package missing.")
+            print("[WARNING] Run repair.bat on Windows, or ./repair.sh on macOS/Linux, then start again.")
+            yield
+            return
+
         try:
             with state.tts_lock:
                 state.tts = create_viener_engine("gguf")
             print("[OK] VieNeu-TTS-v2 model loaded from local files.")
-            print(f"[OK] Outputs directory: {OUTPUTS_DIR}")
+            print(f"[OK] Outputs directory: {get_outputs_dir()}")
         except Exception as e:
             print(f"[ERROR] Failed to load local model: {e}")
             import traceback
@@ -76,7 +76,7 @@ app = create_app()
 
 def run_server(host: str = DEFAULT_HOST, port: int = DEFAULT_PORT):
     """Start the server. Used by both __main__ and the desktop launcher."""
-    uvicorn.run(app, host=host, port=port, log_level="warning")
+    uvicorn.run(app, host=host, port=port, log_level="warning", log_config=None)
 
 
 if __name__ == "__main__":

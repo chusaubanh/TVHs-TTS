@@ -3,25 +3,39 @@ import os
 import re
 import shutil
 import tempfile
+import unicodedata
 from datetime import datetime
 
 import numpy as np
 import soundfile as sf
 from fastapi.responses import StreamingResponse
 
-from backend.config import DEFAULT_SILENCE_P, OUTPUTS_DIR
+from backend.config import DEFAULT_SILENCE_P, get_outputs_dir
+
+
+def _ascii_slug(value: str, fallback: str = "audio") -> str:
+    normalized = unicodedata.normalize("NFKD", value)
+    ascii_text = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^A-Za-z0-9]+", "_", ascii_text).strip("_")
+    return slug or fallback
+
+
+def _safe_print(message: str) -> None:
+    try:
+        print(message)
+    except UnicodeEncodeError:
+        print(message.encode("ascii", "replace").decode("ascii"))
 
 
 def save_audio_to_disk(audio_data: np.ndarray, sample_rate: int, voice: str = "unknown", text: str = "") -> str:
     """Save generated audio to outputs/ directory. Returns filename."""
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    safe_text = re.sub(r"[^\w\s]", "", text[:30]).strip().replace(" ", "_")
-    if not safe_text:
-        safe_text = "audio"
-    filename = f"{timestamp}_{voice}_{safe_text}.wav"
-    filepath = OUTPUTS_DIR / filename
+    safe_text = _ascii_slug(text[:30])
+    safe_voice = _ascii_slug(voice, "voice")
+    filename = f"{timestamp}_{safe_voice}_{safe_text}.wav"
+    filepath = get_outputs_dir() / filename
     sf.write(str(filepath), audio_data, sample_rate, format="WAV")
-    print(f"   [SAVE] Audio saved: {filename}")
+    _safe_print(f"   [SAVE] Audio saved: {filename}")
     return filename
 
 
@@ -84,7 +98,7 @@ def generate_audio_with_pause(
     while i < len(parts):
         segment = parts[i].strip()
         if segment:
-            print(f"   [PAUSE] Generating segment: '{segment[:50]}...'")
+            _safe_print(f"   [PAUSE] Generating segment: '{_ascii_slug(segment[:50])}...'")
             audio = tts_engine.infer(segment, voice=voice, silence_p=silence_p, emotion_tag=emotion_tag)
             audio_segments.append(audio)
 
@@ -94,7 +108,7 @@ def generate_audio_with_pause(
             pause_seconds = duration if unit == "s" else duration / 1000.0
             silence = np.zeros(int(pause_seconds * tts_engine.sample_rate), dtype=np.float32)
             audio_segments.append(silence)
-            print(f"   [PAUSE] Inserted {pause_seconds}s silence")
+            _safe_print(f"   [PAUSE] Inserted {pause_seconds}s silence")
             i += 3
         else:
             i += 1

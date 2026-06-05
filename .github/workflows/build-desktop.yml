@@ -1,0 +1,85 @@
+name: Build Desktop Apps
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - codex/local-packaging
+
+jobs:
+  windows:
+    name: Windows installer
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Inno Setup
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+
+      - name: Build Windows app and installer
+        shell: powershell
+        run: uv run --python 3.12 python build.py
+
+      - name: Upload Windows installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThanhVinhStudio-Windows-Setup
+          path: dist/ThanhVinhStudio-Setup.exe
+          if-no-files-found: error
+
+  macos:
+    name: macOS app package
+    runs-on: macos-14
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Build macOS app and zip
+        run: uv run --python 3.12 python build.py
+
+      - name: Create unsigned DMG
+        run: |
+          rm -rf dist/dmg-staging
+          mkdir -p dist/dmg-staging
+          cp -R "dist/ThanhVinhStudio.app" "dist/dmg-staging/ThanhVinhStudio.app"
+          cp "dist/Download Models.command" "dist/dmg-staging/Download Models.command"
+          cp "dist/Open First Time.command" "dist/dmg-staging/Open First Time.command"
+          ln -s /Applications "dist/dmg-staging/Applications"
+          hdiutil create \
+            -volname "ThanhVinhStudio" \
+            -srcfolder "dist/dmg-staging" \
+            -ov \
+            -format UDZO \
+            "dist/ThanhVinhStudio-macOS-unsigned.dmg"
+
+      - name: Upload macOS zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThanhVinhStudio-macOS-Zip
+          path: dist/ThanhVinhStudio-macOS.zip
+          if-no-files-found: error
+
+      - name: Upload macOS DMG
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThanhVinhStudio-macOS-Unsigned-DMG
+          path: dist/ThanhVinhStudio-macOS-unsigned.dmg
+          if-no-files-found: error

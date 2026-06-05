@@ -5,13 +5,14 @@ from pathlib import Path
 
 from fastapi.responses import FileResponse
 
-from backend.config import OUTPUTS_DIR
+from backend.config import get_outputs_dir
 
 
 def list_history() -> dict:
     """List all saved audio files."""
+    outputs_dir = get_outputs_dir()
     files = []
-    for f in sorted(OUTPUTS_DIR.glob("*.wav"), key=lambda x: x.stat().st_mtime, reverse=True):
+    for f in sorted(outputs_dir.glob("*.wav"), key=lambda x: x.stat().st_mtime, reverse=True):
         stat = f.stat()
         files.append({
             "filename": f.name,
@@ -23,9 +24,10 @@ def list_history() -> dict:
 
 def get_audio_file(filename: str) -> FileResponse:
     """Serve a saved audio file. Validates path safety."""
-    filepath = (OUTPUTS_DIR / filename).resolve()
+    outputs_dir = get_outputs_dir()
+    filepath = (outputs_dir / filename).resolve()
     try:
-        filepath.relative_to(OUTPUTS_DIR.resolve())
+        filepath.relative_to(outputs_dir.resolve())
     except ValueError:
         raise ValueError("Invalid path")
     if not filepath.exists():
@@ -35,9 +37,10 @@ def get_audio_file(filename: str) -> FileResponse:
 
 def delete_audio_file(filename: str) -> dict:
     """Delete a saved audio file. Validates path safety."""
-    filepath = (OUTPUTS_DIR / filename).resolve()
+    outputs_dir = get_outputs_dir()
+    filepath = (outputs_dir / filename).resolve()
     try:
-        filepath.relative_to(OUTPUTS_DIR.resolve())
+        filepath.relative_to(outputs_dir.resolve())
     except ValueError:
         raise ValueError("Invalid path")
     if not filepath.exists():

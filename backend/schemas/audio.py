@@ -19,7 +19,6 @@ class DialogueRequest(BaseModel):
 class SpeechRequest(BaseModel):
     text: str
     voice: Optional[str] = None
-    stream: bool = False
     speed: float = DEFAULT_SPEED
     silence_p: float = DEFAULT_SILENCE_P
     emotion: str = "natural"

@@ -49,10 +49,6 @@ interface Props {
   onRemoveLine: (id: number) => void;
   onUpdateLine: (id: number, field: keyof DialogueLine, value: string | number) => void;
 
-  // Stream
-  streamMode: boolean;
-  onStreamChange: (v: boolean) => void;
-
   onRefresh: () => void;
 }
 
@@ -67,7 +63,6 @@ export function Sidebar(props: Props) {
     hardwareInfo, detecting, onDetectHardware,
     refFile, refText, onRefFileChange, onRefTextChange,
     dialogueLines, onAddLine, onRemoveLine, onUpdateLine,
-    streamMode, onStreamChange,
     onRefresh,
   } = props;
 
@@ -81,7 +76,7 @@ export function Sidebar(props: Props) {
   };
 
   return (
-    <aside className="flex w-full flex-col gap-4 overflow-hidden p-4 lg:w-[340px]" style={{ background: "var(--color-tvhs-surface)", borderRight: "1px solid var(--color-tvhs-border)", borderBottom: "1px solid var(--color-tvhs-border)" }}>
+    <aside className="flex h-full w-[340px] min-w-[340px] max-w-[340px] flex-col gap-4 overflow-hidden p-4" style={{ background: "var(--color-tvhs-surface)", borderRight: "1px solid var(--color-tvhs-border)", borderBottom: "1px solid var(--color-tvhs-border)" }}>
       {/* LoRA Section */}
       <div className="rounded-xl p-3 transition-opacity" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)", opacity: currentModel !== "pytorch" ? 0.5 : 1 }}>
         <button onClick={() => setShowLoraPanel(!showLoraPanel)} className="flex w-full items-center justify-between text-left">
@@ -324,15 +319,6 @@ export function Sidebar(props: Props) {
             </div>
           </>
         )}
-      </div>
-
-      {/* Streaming toggle */}
-      <div className="pt-2" style={{ borderTop: "1px solid var(--color-tvhs-border)" }}>
-        <label className="flex cursor-pointer items-center gap-1.5">
-          <input type="checkbox" checked={streamMode} onChange={(e) => onStreamChange(e.target.checked)} className="h-3 w-3 rounded" style={{ accentColor: "var(--color-tvhs-accent)" }} />
-          <Zap className="h-3 w-3" style={{ color: "#f59e0b" }} />
-          <span className="text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Streaming (nhanh hơn)</span>
-        </label>
       </div>
 
       <div className="mt-auto pt-3" style={{ borderTop: "1px solid var(--color-tvhs-border)" }}>

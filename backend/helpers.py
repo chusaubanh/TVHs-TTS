@@ -1,6 +1,7 @@
 """Compatibility utility exports plus TTS engine factory and network helpers."""
 
 import socket
+from pathlib import Path
 
 from backend.config import GGUF_FILENAME, LOCAL_GGUF_DIR, REMOTE_PYTORCH_REPO
 from backend.utils.audio import (
@@ -50,6 +51,7 @@ def create_viener_engine(model_type: str = "gguf"):
             backbone_device="cpu",
             codec_device="cpu",
         )
+    patch_llama_local_from_pretrained()
     return Vieneu(
         mode="standard",
         backbone_repo=str(LOCAL_GGUF_DIR),
@@ -58,6 +60,47 @@ def create_viener_engine(model_type: str = "gguf"):
         codec_device="cpu",
         emotion="natural",
     )
+
+
+def patch_llama_local_from_pretrained():
+    """Allow vieneu's GGUF loader to consume a local model directory on Windows."""
+    try:
+        from llama_cpp import Llama
+    except Exception:
+        return
+
+    if getattr(Llama.from_pretrained, "_thanhvinhstudio_patched", False):
+        return
+
+    original_from_pretrained = Llama.from_pretrained
+
+    @classmethod
+    def from_pretrained_local(cls, repo_id: str, filename: str = "*.gguf", **kwargs):
+        repo_path = Path(repo_id)
+        if repo_path.exists():
+            if filename and filename != "*.gguf":
+                model_path = repo_path / filename
+            else:
+                matches = list(repo_path.glob("*.gguf"))
+                if not matches:
+                    raise FileNotFoundError(f"No GGUF model found in {repo_path}")
+                model_path = matches[0]
+
+            allowed = {
+                "verbose",
+                "n_gpu_layers",
+                "n_ctx",
+                "flash_attn",
+            }
+            llama_kwargs = {key: value for key, value in kwargs.items() if key in allowed}
+            if "mlock" in kwargs:
+                llama_kwargs["use_mlock"] = kwargs["mlock"]
+            return cls(model_path=str(model_path), **llama_kwargs)
+
+        return original_from_pretrained(repo_id=repo_id, filename=filename, **kwargs)
+
+    from_pretrained_local._thanhvinhstudio_patched = True
+    Llama.from_pretrained = from_pretrained_local
 
 
 def find_available_port(start_port: int = 8000, max_tries: int = 10) -> int:

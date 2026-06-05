@@ -2,6 +2,7 @@
 
 import os
 import sys
+import json
 from pathlib import Path
 
 # ─── App metadata ────────────────────────────────────────────────────────────
@@ -13,6 +14,8 @@ DEFAULT_PORT = 8000
 ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
     "tauri://localhost",
@@ -26,7 +29,12 @@ else:
     BUNDLE_DIR = Path(__file__).resolve().parent.parent
 
 # ─── Model paths ─────────────────────────────────────────────────────────────
-MODELS_DIR = BUNDLE_DIR / "models"
+if getattr(sys, 'frozen', False):
+    APP_DATA = Path(sys.executable).resolve().parent
+else:
+    APP_DATA = BUNDLE_DIR
+
+MODELS_DIR = APP_DATA / "models"
 LOCAL_GGUF_DIR = MODELS_DIR / "base" / "VieNeu-TTS-v2-gguf"
 LOCAL_LORA_DIR = MODELS_DIR / "lora"
 LOCAL_OMNIVOICE_DIR = MODELS_DIR / "omnivoice"
@@ -34,17 +42,49 @@ LOCAL_OMNIVOICE_DIR = MODELS_DIR / "omnivoice"
 GGUF_FILENAME = "VieNeu-TTS-v2-Q4-K-M.gguf"
 
 # ─── Output directory ────────────────────────────────────────────────────────
-if getattr(sys, 'frozen', False):
-    if sys.platform == "win32":
-        APP_DATA = Path(os.environ.get("LOCALAPPDATA", Path.home())) / "ThanhVinhStudio"
-    else:
-        APP_DATA = Path.home() / "Library" / "Application Support" / "ThanhVinhStudio"
-    OUTPUTS_DIR = APP_DATA / "outputs"
-else:
-    OUTPUTS_DIR = BUNDLE_DIR / "outputs"
-OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+DEFAULT_OUTPUTS_DIR = APP_DATA / "outputs"
+SETTINGS_FILE = APP_DATA / "settings.json"
 
-SAVED_VOICES_DIR = OUTPUTS_DIR / "saved_voices"
+
+def get_outputs_dir() -> Path:
+    """Return the configured audio output directory, falling back to app/outputs."""
+    output_dir = DEFAULT_OUTPUTS_DIR
+    try:
+        if SETTINGS_FILE.exists():
+            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+            configured = settings.get("output_dir")
+            if configured:
+                output_dir = Path(configured).expanduser()
+    except Exception:
+        output_dir = DEFAULT_OUTPUTS_DIR
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    return output_dir
+
+
+def set_outputs_dir(path: str) -> Path:
+    """Persist and return a writable audio output directory."""
+    output_dir = Path(path).expanduser().resolve()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    test_file = output_dir / ".write_test"
+    test_file.write_text("ok", encoding="utf-8")
+    test_file.unlink()
+
+    settings = {}
+    if SETTINGS_FILE.exists():
+        try:
+            settings = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            settings = {}
+    settings["output_dir"] = str(output_dir)
+    SETTINGS_FILE.write_text(json.dumps(settings, ensure_ascii=False, indent=2), encoding="utf-8")
+    return output_dir
+
+
+OUTPUTS_DIR = get_outputs_dir()
+
+SAVED_VOICES_DIR = APP_DATA / "saved_voices"
 SAVED_VOICES_DIR.mkdir(parents=True, exist_ok=True)
 
 # ─── Remote repos ────────────────────────────────────────────────────────────

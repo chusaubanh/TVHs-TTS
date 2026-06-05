@@ -5,11 +5,24 @@ import platform
 from pathlib import Path
 
 from fastapi import APIRouter
-from backend.config import LOCAL_GGUF_DIR, LOCAL_OMNIVOICE_DIR, REMOTE_GGUF_REPO, OUTPUTS_DIR, KNOWN_LORAS, ESPEAK_WIN_PATH
+from pydantic import BaseModel
+from backend.config import (
+    LOCAL_GGUF_DIR,
+    LOCAL_OMNIVOICE_DIR,
+    REMOTE_GGUF_REPO,
+    KNOWN_LORAS,
+    ESPEAK_WIN_PATH,
+    get_outputs_dir,
+    set_outputs_dir,
+)
 from backend.state import state
 from backend.helpers import is_base_model_downloaded, is_omnivoice_downloaded, list_local_loras, has_cuda, build_lora_list
 
 router = APIRouter()
+
+
+class OutputFolderRequest(BaseModel):
+    path: str
 
 
 def _check_espeak() -> dict:
@@ -43,16 +56,17 @@ def _check_cuda() -> dict:
 
 def _check_output_folder() -> dict:
     """Check if output directory exists and is writable."""
+    outputs_dir = get_outputs_dir()
     try:
-        OUTPUTS_DIR.mkdir(parents=True, exist_ok=True)
+        outputs_dir.mkdir(parents=True, exist_ok=True)
         # Test write
-        test_file = OUTPUTS_DIR / ".write_test"
+        test_file = outputs_dir / ".write_test"
         test_file.write_text("ok")
         test_file.unlink()
-        wav_count = len(list(OUTPUTS_DIR.glob("*.wav")))
-        return {"ok": True, "path": str(OUTPUTS_DIR), "wav_count": wav_count}
+        wav_count = len(list(outputs_dir.glob("*.wav")))
+        return {"ok": True, "path": str(outputs_dir), "wav_count": wav_count}
     except Exception as e:
-        return {"ok": False, "path": str(OUTPUTS_DIR), "error": str(e)}
+        return {"ok": False, "path": str(outputs_dir), "error": str(e)}
 
 
 @router.get("/health")
@@ -169,6 +183,7 @@ async def list_available_models():
 async def get_status():
     """Get system status: what's downloaded, what's loaded."""
     available_loras = build_lora_list()
+    outputs_dir = get_outputs_dir()
 
     return {
         "base_model": {
@@ -186,6 +201,45 @@ async def get_status():
             "available": available_loras,
         },
         "download_progress": state.download_progress,
-        "outputs_dir": str(OUTPUTS_DIR),
-        "saved_audio_count": len(list(OUTPUTS_DIR.glob("*.wav"))),
+        "outputs_dir": str(outputs_dir),
+        "saved_audio_count": len(list(outputs_dir.glob("*.wav"))),
     }
+
+
+@router.get("/v1/settings")
+async def get_settings():
+    """Return user-configurable desktop settings."""
+    outputs_dir = get_outputs_dir()
+    return {"output_dir": str(outputs_dir)}
+
+
+@router.post("/v1/settings/output-folder")
+async def update_output_folder(body: OutputFolderRequest):
+    """Set the audio output folder."""
+    output_dir = set_outputs_dir(body.path)
+    return {"status": "ok", "output_dir": str(output_dir)}
+
+
+@router.post("/v1/settings/choose-output-folder")
+async def choose_output_folder():
+    """Open a native folder picker on the local machine and persist the selection."""
+    try:
+        import tkinter as tk
+        from tkinter import filedialog
+
+        root = tk.Tk()
+        root.withdraw()
+        root.attributes("-topmost", True)
+        selected = filedialog.askdirectory(
+            title="Chọn thư mục lưu audio",
+            initialdir=str(get_outputs_dir()),
+        )
+        root.destroy()
+    except Exception as e:
+        return {"status": "error", "error": str(e), "output_dir": str(get_outputs_dir())}
+
+    if not selected:
+        return {"status": "cancelled", "output_dir": str(get_outputs_dir())}
+
+    output_dir = set_outputs_dir(selected)
+    return {"status": "ok", "output_dir": str(output_dir)}

@@ -6,6 +6,7 @@ __pycache__/
 dist/
 build/
 *.spec
+!thanhvinhstudio.spec
 .venv/
 venv/
 
@@ -45,6 +46,9 @@ desktop.ini
 *.msi
 *.whl
 installer.nsi
+!installer.nsi
+installer.iss
+!installer.iss
 
 # Logs
 *.log

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
-import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell, ChevronLeft, Radio } from "lucide-react";
+import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell, Radio, FolderOpen, RefreshCw } from "lucide-react";
 import { showToast, ToastContainer } from "../components/toast";
 import { SetupScreen } from "../components/setup-screen";
 import { Sidebar } from "../components/sidebar";
@@ -13,6 +13,7 @@ import { Settings as SettingsPage } from "../components/settings";
 import { OmniVoicePanel } from "../components/omnivoice-panel";
 import { useSystemStatus, useVoices, useModelSwitch, useHardware, useLora, useAudioHistory, useDialogue, useOmniVoice, useTtsGeneration } from "../hooks";
 import { LOGO_URL } from "../lib/constants";
+import { api } from "../lib/api";
 
 const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, breadcrumb: "/ Tổng quan", href: null },
@@ -39,22 +40,35 @@ function HomeContent() {
     const tab = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
     return tab && ["dashboard", "studio", "omnivoice", "voices", "history", "settings"].includes(tab) ? tab : "dashboard";
   });
-  const [pageVisible, setPageVisible] = useState(true);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const [choosingOutput, setChoosingOutput] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const navigateTo = useCallback((page: string) => {
-    setPageVisible(false);
-    setTimeout(() => {
-      setActivePage(page);
-      setPageVisible(true);
-      if (page === "studio") setSidebarOpen(true);
-      else setSidebarOpen(false);
-      const url = page === "dashboard" ? "/studio" : `/studio?tab=${page}`;
-      window.history.replaceState(null, "", url);
-    }, 200);
+    setActivePage(page);
+    const url = page === "dashboard" ? "/studio" : `/studio?tab=${page}`;
+    window.history.replaceState(null, "", url);
   }, []);
+
+  const handleChooseOutputFolder = useCallback(async () => {
+    setChoosingOutput(true);
+    try {
+      const result = await api.chooseOutputFolder();
+      if (!result) {
+        showToast("error", "Không thể mở hộp thoại chọn thư mục.");
+        return;
+      }
+      if (result.status === "cancelled") return;
+      if (result.status !== "ok") {
+        showToast("error", result.error || "Không thể đổi thư mục lưu.");
+        return;
+      }
+      await statusHook.checkStatus();
+      await historyHook.fetchAudioHistory();
+      showToast("success", "Đã đổi thư mục lưu audio.");
+    } finally {
+      setChoosingOutput(false);
+    }
+  }, [historyHook, statusHook]);
 
   useEffect(() => {
     (async () => {
@@ -163,11 +177,6 @@ function HomeContent() {
         <div className="flex flex-1 flex-col overflow-hidden">
           {/* Topbar */}
           <header className="flex h-12 shrink-0 items-center gap-3 border-b border-tvhs-border bg-tvhs-surface px-5">
-            {activePage === "studio" && sidebarOpen && (
-              <button onClick={() => setSidebarOpen(false)} className="mr-1 flex h-7 w-7 items-center justify-center rounded-md text-tvhs-text-muted transition hover:bg-tvhs-elevated hover:text-tvhs-text lg:hidden">
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            )}
             <span className="text-sm font-bold text-tvhs-text">{currentNav.label}</span>
             <span className="text-[11px] text-tvhs-text-muted">{currentNav.breadcrumb}</span>
             <div className="flex-1" />
@@ -175,6 +184,15 @@ function HomeContent() {
               <Search className="h-3.5 w-3.5 text-tvhs-text-muted" />
               <input type="text" placeholder="Tìm kiếm..." className="w-40 bg-transparent text-xs text-tvhs-text outline-none placeholder:text-tvhs-text-muted" />
             </div>
+            <button
+              onClick={handleChooseOutputFolder}
+              disabled={choosingOutput}
+              className="flex h-8 items-center gap-1.5 rounded-lg border border-tvhs-border bg-tvhs-elevated px-2.5 text-[10px] font-semibold text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text disabled:cursor-not-allowed disabled:opacity-60"
+              title={statusHook.status?.outputs_dir ? `Đang lưu tại: ${statusHook.status.outputs_dir}` : "Chọn thư mục lưu audio"}
+            >
+              {choosingOutput ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <FolderOpen className="h-3.5 w-3.5" />}
+              <span>Lưu output</span>
+            </button>
             <button className="flex h-8 w-8 items-center justify-center rounded-lg text-tvhs-text-muted transition hover:bg-tvhs-elevated hover:text-tvhs-text">
               <Bell className="h-4 w-4" />
             </button>
@@ -184,8 +202,8 @@ function HomeContent() {
           <div className="relative flex-1 overflow-hidden">
             {/* Studio page with sidebar */}
             {activePage === "studio" && (
-              <div className={`absolute inset-0 flex transition-all duration-300 ${pageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
-                <div className={`transition-all duration-300 ${sidebarOpen ? "w-80" : "w-0"} overflow-hidden border-r border-tvhs-border bg-tvhs-surface lg:w-80`}>
+              <div className="absolute inset-0 grid grid-cols-[340px_minmax(0,1fr)]">
+                <div className="min-w-0 overflow-hidden border-r border-tvhs-border bg-tvhs-surface">
                   <Sidebar
                     mode={ttsHook.mode}
                     currentModel={modelHook.currentModel}
@@ -217,13 +235,11 @@ function HomeContent() {
                     onAddLine={dialogueHook.addDialogueLine}
                     onRemoveLine={dialogueHook.removeDialogueLine}
                     onUpdateLine={dialogueHook.updateDialogueLine}
-                    streamMode={ttsHook.streamMode}
-                    onStreamChange={ttsHook.setStreamMode}
                     onRefresh={() => { statusHook.checkStatus(); voicesHook.fetchVoices(); loraHook.fetchLoras(); }}
                   />
                 </div>
 
-                <div className="flex flex-1 flex-col overflow-hidden">
+                <div className="flex min-w-0 flex-col overflow-hidden">
                   {/* Mode Tabs */}
                   <div className="flex items-center gap-1 border-b border-tvhs-border bg-tvhs-surface px-5 py-2">
                     {([
@@ -337,11 +353,11 @@ function HomeContent() {
 
             {/* Other pages */}
             {activePage !== "studio" && (
-              <div className={`h-full overflow-y-auto p-6 transition-all duration-300 ${pageVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+              <div className="h-full overflow-y-auto p-6">
                 {activePage === "dashboard" && <Dashboard audioHistory={historyHook.audioHistory} voices={voicesHook.voices} status={statusHook.status} onNavigate={navigateTo} />}
                 {activePage === "voices" && <VoiceLibrary voices={voicesHook.voices} selectedVoice={voicesHook.selectedVoice} onSelect={voicesHook.setSelectedVoice} />}
                 {activePage === "history" && <History audioHistory={historyHook.audioHistory} onPlay={historyHook.playHistoryFile} onDelete={historyHook.handleDeleteAudio} />}
-                {activePage === "settings" && <SettingsPage status={statusHook.status} hardwareInfo={hardwareHook.hardwareInfo} detecting={hardwareHook.detecting} onDetectHardware={hardwareHook.handleDetectHardware} onReloadModel={() => statusHook.handleReloadModel()} />}
+                {activePage === "settings" && <SettingsPage status={statusHook.status} hardwareInfo={hardwareHook.hardwareInfo} detecting={hardwareHook.detecting} onDetectHardware={hardwareHook.handleDetectHardware} onReloadModel={() => statusHook.handleReloadModel()} onRefreshStatus={statusHook.checkStatus} />}
                 {activePage === "omnivoice" && <OmniVoicePanel {...ovHook} />}
               </div>
             )}

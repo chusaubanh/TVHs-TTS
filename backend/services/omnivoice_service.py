@@ -6,7 +6,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 
-from backend.config import LOCAL_OMNIVOICE_DIR, REMOTE_OMNIVOICE_REPO, OUTPUTS_DIR, SAVED_VOICES_DIR
+from backend.config import LOCAL_OMNIVOICE_DIR, REMOTE_OMNIVOICE_REPO, SAVED_VOICES_DIR, get_outputs_dir
 from backend.state import state
 from backend.utils.audio import (
     audio_to_response,
@@ -100,7 +100,7 @@ def generate_tts(text: str, language: str = "vie", speed: float = 1.0, voice_nam
 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     filename = f"omnivoice_{timestamp}.wav"
-    filepath = OUTPUTS_DIR / filename
+    filepath = get_outputs_dir() / filename
     sf.write(str(filepath), audio_data, sample_rate, format='WAV')
 
     return audio_to_response(audio_data, sample_rate)
@@ -125,7 +125,7 @@ def generate_clone(text: str, reference_audio, language: str = "vie", speed: flo
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"omnivoice_clone_{timestamp}.wav"
-        filepath = OUTPUTS_DIR / filename
+        filepath = get_outputs_dir() / filename
         sf.write(str(filepath), audio_data, sample_rate, format='WAV')
 
         # Save voice if requested

@@ -1,8 +1,10 @@
 "use client";
 
-import { Cpu, Settings as SettingsIcon, Download, Info, RefreshCw } from "lucide-react";
+import { Cpu, Download, FolderOpen, Info, RefreshCw, Settings as SettingsIcon } from "lucide-react";
 import { useState } from "react";
-import type { SystemStatus, HardwareInfo } from "../types";
+import { api } from "../lib/api";
+import type { HardwareInfo, SystemStatus } from "../types";
+import { showToast } from "./toast";
 
 interface Props {
   status: SystemStatus | null;
@@ -10,6 +12,7 @@ interface Props {
   detecting: boolean;
   onDetectHardware: () => void;
   onReloadModel: () => void;
+  onRefreshStatus: () => Promise<unknown>;
 }
 
 const SETTINGS_TABS = [
@@ -19,9 +22,38 @@ const SETTINGS_TABS = [
   { id: "about", label: "About", icon: Info },
 ];
 
-export function Settings({ status, hardwareInfo, detecting, onDetectHardware, onReloadModel }: Props) {
+export function Settings({
+  status,
+  hardwareInfo,
+  detecting,
+  onDetectHardware,
+  onReloadModel,
+  onRefreshStatus,
+}: Props) {
   const [activeTab, setActiveTab] = useState("model");
+  const [choosingOutput, setChoosingOutput] = useState(false);
   const currentModel = status?.current_model?.type?.toUpperCase() || "GGUF";
+  const outputDir = status?.outputs_dir || "";
+
+  const handleChooseOutputFolder = async () => {
+    setChoosingOutput(true);
+    try {
+      const result = await api.chooseOutputFolder();
+      if (!result) {
+        showToast("error", "Không thể mở hộp thoại chọn thư mục.");
+        return;
+      }
+      if (result.status === "cancelled") return;
+      if (result.status !== "ok") {
+        showToast("error", result.error || "Không thể đổi thư mục lưu.");
+        return;
+      }
+      await onRefreshStatus();
+      showToast("success", "Đã đổi thư mục lưu audio.");
+    } finally {
+      setChoosingOutput(false);
+    }
+  };
 
   return (
     <div className="saas-page">
@@ -44,35 +76,49 @@ export function Settings({ status, hardwareInfo, detecting, onDetectHardware, on
           {activeTab === "model" && (
             <>
               <div className="studio-panel p-4">
-                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text"><Cpu className="h-4 w-4 text-tvhs-accent" /> Model Engine</div>
+                <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text">
+                  <Cpu className="h-4 w-4 text-tvhs-accent" /> Model Engine
+                </div>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <div><div className="text-xs font-semibold text-tvhs-text">Engine hiện tại</div><div className="text-[10px] text-tvhs-text-muted">{currentModel} — tối ưu cho CPU</div></div>
+                    <div>
+                      <div className="text-xs font-semibold text-tvhs-text">Engine hiện tại</div>
+                      <div className="text-[10px] text-tvhs-text-muted">{currentModel} - tối ưu cho CPU</div>
+                    </div>
                     <span className="rounded bg-tvhs-accent-faint px-2 py-1 text-[10px] font-bold text-tvhs-accent">{currentModel}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div><div className="text-xs font-semibold text-tvhs-text">Hardware Detection</div><div className="text-[10px] text-tvhs-text-muted">Phát hiện GPU và đề xuất engine</div></div>
+                    <div>
+                      <div className="text-xs font-semibold text-tvhs-text">Hardware Detection</div>
+                      <div className="text-[10px] text-tvhs-text-muted">Phát hiện GPU và đề xuất engine</div>
+                    </div>
                     <button onClick={onDetectHardware} disabled={detecting} className="btn-primary !rounded-lg !px-3 !py-1.5 !text-[10px]">
                       {detecting ? <RefreshCw className="h-3 w-3 animate-spin" /> : <Cpu className="h-3 w-3" />} Detect
                     </button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <div><div className="text-xs font-semibold text-tvhs-text">Base Model</div><div className="text-[10px] text-tvhs-text-muted">VieNeu-TTS-v2 · {status?.base_model.downloaded ? "Đã tải" : "Chưa tải"}</div></div>
+                    <div>
+                      <div className="text-xs font-semibold text-tvhs-text">Base Model</div>
+                      <div className="text-[10px] text-tvhs-text-muted">VieNeu-TTS-v2 - {status?.base_model.downloaded ? "Đã tải" : "Chưa tải"}</div>
+                    </div>
                     <button onClick={onReloadModel} className="rounded-lg border border-tvhs-border bg-tvhs-elevated px-3 py-1.5 text-[10px] font-semibold text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text">
                       <RefreshCw className="h-3 w-3" /> Tải lại
                     </button>
                   </div>
                 </div>
               </div>
+
               {hardwareInfo && (
                 <div className="studio-panel p-4">
-                  <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text"><Cpu className="h-4 w-4 text-tvhs-accent" /> Hardware Info</div>
+                  <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text">
+                    <Cpu className="h-4 w-4 text-tvhs-accent" /> Hardware Info
+                  </div>
                   <div className="space-y-2 text-xs">
                     <div className="flex justify-between"><span className="text-tvhs-text-muted">CPU</span><span className="text-tvhs-text">{hardwareInfo.cpu}</span></div>
                     <div className="flex justify-between"><span className="text-tvhs-text-muted">RAM</span><span className="text-tvhs-text">{hardwareInfo.ram_gb} GB</span></div>
                     <div className="flex justify-between"><span className="text-tvhs-text-muted">GPU</span><span className="text-tvhs-text">{hardwareInfo.gpu_name || "Không có"}</span></div>
                     <div className="flex justify-between"><span className="text-tvhs-text-muted">VRAM</span><span className="text-tvhs-text">{hardwareInfo.vram_gb} GB</span></div>
-                    <div className="mt-2 rounded-lg bg-tvhs-accent-faint p-2 text-[10px] text-tvhs-accent">{hardwareInfo.recommendation} — {hardwareInfo.reason}</div>
+                    <div className="mt-2 rounded-lg bg-tvhs-accent-faint p-2 text-[10px] text-tvhs-accent">{hardwareInfo.recommendation} - {hardwareInfo.reason}</div>
                   </div>
                 </div>
               )}
@@ -81,33 +127,64 @@ export function Settings({ status, hardwareInfo, detecting, onDetectHardware, on
 
           {activeTab === "general" && (
             <div className="studio-panel p-4">
-              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text"><SettingsIcon className="h-4 w-4 text-tvhs-accent" /> General Settings</div>
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text">
+                <SettingsIcon className="h-4 w-4 text-tvhs-accent" /> General Settings
+              </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between"><div><div className="text-xs font-semibold text-tvhs-text">Ngôn ngữ</div><div className="text-[10px] text-tvhs-text-muted">Giao diện tiếng Việt</div></div><span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">Vietnamese</span></div>
-                <div className="flex items-center justify-between"><div><div className="text-xs font-semibold text-tvhs-text">Theme</div><div className="text-[10px] text-tvhs-text-muted">Gold Dark</div></div><span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">Dark</span></div>
+                <div className="flex items-center justify-between">
+                  <div><div className="text-xs font-semibold text-tvhs-text">Ngôn ngữ</div><div className="text-[10px] text-tvhs-text-muted">Giao diện tiếng Việt</div></div>
+                  <span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">Vietnamese</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div><div className="text-xs font-semibold text-tvhs-text">Theme</div><div className="text-[10px] text-tvhs-text-muted">Gold Dark</div></div>
+                  <span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">Dark</span>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === "export" && (
             <div className="studio-panel p-4">
-              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text"><Download className="h-4 w-4 text-tvhs-accent" /> Export Settings</div>
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text">
+                <Download className="h-4 w-4 text-tvhs-accent" /> Export Settings
+              </div>
               <div className="space-y-4">
-                <div className="flex items-center justify-between"><div><div className="text-xs font-semibold text-tvhs-text">Định dạng</div><div className="text-[10px] text-tvhs-text-muted">WAV 24kHz mono 16-bit</div></div><span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">WAV</span></div>
-                <div className="flex items-center justify-between"><div><div className="text-xs font-semibold text-tvhs-text">Thư mục lưu</div><div className="text-[10px] text-tvhs-text-muted">Tự động lưu vào audio/</div></div><span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">Default</span></div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-semibold text-tvhs-text">Định dạng</div>
+                    <div className="text-[10px] text-tvhs-text-muted">WAV 24kHz mono 16-bit</div>
+                  </div>
+                  <span className="rounded bg-tvhs-elevated px-2 py-1 text-[10px] text-tvhs-text-secondary">WAV</span>
+                </div>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-tvhs-text">Thư mục lưu audio</div>
+                    <div className="mt-1 max-w-xl truncate text-[10px] text-tvhs-text-muted" title={outputDir}>{outputDir || "Chưa thiết lập"}</div>
+                  </div>
+                  <button
+                    onClick={handleChooseOutputFolder}
+                    disabled={choosingOutput}
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-tvhs-border bg-tvhs-elevated px-3 py-1.5 text-[10px] font-semibold text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {choosingOutput ? <RefreshCw className="h-3 w-3 animate-spin" /> : <FolderOpen className="h-3 w-3" />}
+                    Chọn thư mục
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === "about" && (
             <div className="studio-panel p-4">
-              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text"><Info className="h-4 w-4 text-tvhs-accent" /> Thông tin</div>
+              <div className="mb-3 flex items-center gap-2 text-sm font-bold text-tvhs-text">
+                <Info className="h-4 w-4 text-tvhs-accent" /> Thông tin
+              </div>
               <div className="space-y-3 text-xs">
-                <div className="flex justify-between"><span className="text-tvhs-text-muted">Version</span><span className="font-semibold text-tvhs-text">ThanhVinhStudio v2.0</span></div>
+                <div className="flex justify-between"><span className="text-tvhs-text-muted">Version</span><span className="font-semibold text-tvhs-text">ThanhVinhStudio v4.0.1</span></div>
                 <div className="flex justify-between"><span className="text-tvhs-text-muted">Engine</span><span className="text-tvhs-text">VieNeu-TTS-v2</span></div>
                 <div className="flex justify-between"><span className="text-tvhs-text-muted">Backend</span><span className="text-tvhs-text">FastAPI</span></div>
                 <div className="flex justify-between"><span className="text-tvhs-text-muted">Frontend</span><span className="text-tvhs-text">Next.js Static Export</span></div>
-                <div className="mt-2 rounded-lg bg-tvhs-elevated p-3 text-[10px] text-tvhs-text-muted">© 2026 Thành Vinh Holdings · Powered by VieNeu-TTS</div>
+                <div className="mt-2 rounded-lg bg-tvhs-elevated p-3 text-[10px] text-tvhs-text-muted">© 2026 Thành Vinh Holdings - Powered by VieNeu-TTS</div>
               </div>
             </div>
           )}

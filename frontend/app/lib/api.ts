@@ -30,6 +30,11 @@ export const api = {
   fetchLoras: () => get<{ data: LoRAAdapter[]; active: string | null }>("/v1/lora"),
   fetchAudioHistory: () => get<{ files: Array<{ filename: string; size_kb: number; created: string }>; total: number }>("/v1/audio/history"),
   detectHardware: () => get<HardwareInfo>("/v1/hardware/detect"),
+  getSettings: () => get<{ output_dir: string }>("/v1/settings"),
+  chooseOutputFolder: () =>
+    post<{ status: string; output_dir: string; error?: string }>("/v1/settings/choose-output-folder"),
+  setOutputFolder: (path: string) =>
+    post<{ status: string; output_dir: string; error?: string }>("/v1/settings/output-folder", { path }),
 
   // Downloads
   downloadBase: () => post("/v1/download/base"),

@@ -1,6 +1,7 @@
 """Audio endpoints: speech generation, voice cloning, dialogue, history."""
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+import traceback
 
 from backend.state import require_tts
 from backend.models import SpeechRequest, DialogueRequest
@@ -33,11 +34,12 @@ async def generate_speech(request: SpeechRequest):
         return tts_service.generate_speech(
             text=request.text,
             voice_id=request.voice,
-            stream=request.stream,
             silence_p=request.silence_p,
             emotion=request.emotion,
         )
     except Exception as e:
+        print("[ERROR] Speech generation failed:")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -52,6 +54,8 @@ async def clone_speech(
     try:
         return tts_service.clone_speech(text, reference_text, reference_audio)
     except Exception as e:
+        print("[ERROR] Clone generation failed:")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -64,6 +68,8 @@ async def generate_dialogue(request: DialogueRequest):
     try:
         return tts_service.generate_dialogue(request.lines)
     except Exception as e:
+        print("[ERROR] Dialogue generation failed:")
+        print(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 

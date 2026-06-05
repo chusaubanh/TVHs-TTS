@@ -1,7 +1,6 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { showToast } from "../../../components/toast";
 import { API_BASE } from "../../../shared/constants/app";
-import { pcmToWav } from "../../../lib/audio";
 
 export function useTtsGeneration(
   selectedVoice: string,
@@ -14,59 +13,31 @@ export function useTtsGeneration(
   const [mode, setMode] = useState<"preset" | "clone" | "dialogue">("preset");
   const [silenceP, setSilenceP] = useState(0.15);
   const [emotion, setEmotion] = useState("natural");
-  const [streamMode, setStreamMode] = useState(false);
   const [refText, setRefText] = useState("");
   const [refFile, setRefFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
 
-  const handleStreamingPlayback = async (response: Response) => {
-    if (!audioContextRef.current)
-      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
-    const ctx = audioContextRef.current;
-    const reader = response.body?.getReader();
-    if (!reader) return;
-    const chunks: Float32Array[] = [];
-    let totalLength = 0;
-    setIsPlaying(true);
+  const readErrorMessage = async (response: Response) => {
     try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const int16 = new Int16Array(value.buffer, value.byteOffset, value.byteLength / 2);
-        const float32 = new Float32Array(int16.length);
-        for (let i = 0; i < int16.length; i++) float32[i] = int16[i] / 32767.0;
-        chunks.push(float32);
-        totalLength += float32.length;
-      }
-      const combined = new Float32Array(totalLength);
-      let offset = 0;
-      for (const c of chunks) {
-        combined.set(c, offset);
-        offset += c.length;
-      }
-      const buf = ctx.createBuffer(1, combined.length, 24000);
-      buf.getChannelData(0).set(combined);
-      const source = ctx.createBufferSource();
-      source.buffer = buf;
-      source.connect(ctx.destination);
-      source.onended = () => setIsPlaying(false);
-      source.start();
-      const wavBlob = pcmToWav(combined, 24000);
-      if (audioUrl) URL.revokeObjectURL(audioUrl);
-      setAudioUrl(URL.createObjectURL(wavBlob));
+      const data = await response.json();
+      return data?.detail || data?.error || "Lỗi tạo âm thanh.";
     } catch {
-      setIsPlaying(false);
+      return "Lỗi tạo âm thanh.";
     }
   };
 
   const handleGenerate = async () => {
+    if (!text.trim()) {
+      showToast("error", "Vui lòng nhập văn bản cần đọc.");
+      return;
+    }
+
     setLoading(true);
     try {
       let response: Response;
       if (mode === "clone") {
-        if (!refFile || !refText) {
+        if (!refFile || !refText.trim()) {
           showToast("error", "Vui lòng upload file mẫu và nhập văn bản mẫu.");
           setLoading(false);
           return;
@@ -79,31 +50,32 @@ export function useTtsGeneration(
       } else {
         response = await fetch(`${API_BASE}/v1/audio/speech`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json; charset=utf-8" },
           body: JSON.stringify({
             text,
             voice: selectedVoice,
-            stream: streamMode,
             silence_p: silenceP,
             emotion,
           }),
         });
       }
-      if (response.ok) {
-        if (streamMode && mode !== "clone") {
-          await handleStreamingPlayback(response);
-        } else {
-          const blob = await response.blob();
-          if (audioUrl) URL.revokeObjectURL(audioUrl);
-          setAudioUrl(URL.createObjectURL(blob));
-          setIsPlaying(true);
-        }
-        fetchAudioHistory();
-      } else {
-        showToast("error", "Lỗi tạo âm thanh.");
+
+      if (!response.ok) {
+        showToast("error", await readErrorMessage(response));
+        return;
       }
-    } catch {
-      showToast("error", "Không thể kết nối backend.");
+
+      const blob = await response.blob();
+      if (blob.size === 0) {
+        throw new Error("Backend trả về audio rỗng.");
+      }
+
+      if (audioUrl) URL.revokeObjectURL(audioUrl);
+      setAudioUrl(URL.createObjectURL(blob));
+      setIsPlaying(true);
+      fetchAudioHistory();
+    } catch (error) {
+      showToast("error", error instanceof Error ? error.message : "Không thể kết nối backend.");
     } finally {
       setLoading(false);
     }
@@ -142,7 +114,6 @@ export function useTtsGeneration(
     mode,
     silenceP,
     emotion,
-    streamMode,
     refText,
     refFile,
     audioUrl,
@@ -151,7 +122,6 @@ export function useTtsGeneration(
     setMode,
     setSilenceP,
     setEmotion,
-    setStreamMode,
     setRefText,
     setRefFile,
     setAudioUrl,
@@ -159,6 +129,5 @@ export function useTtsGeneration(
     insertPause,
     handlePlayPause,
     handleDownload,
-    handleStreamingPlayback,
   };
 }
