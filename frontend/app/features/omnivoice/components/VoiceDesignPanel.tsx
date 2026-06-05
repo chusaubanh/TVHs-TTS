@@ -109,7 +109,7 @@ export function VoiceDesignPanel({
           <button
             key={preset.name}
             onClick={() => applyPreset(preset.hint)}
-            className="rounded-lg bg-tvhs-elevated px-3 py-1.5 text-[10px] font-medium text-tvhs-text-secondary transition hover:-translate-y-[1px] hover:bg-tvhs-hover"
+            className="rounded-lg bg-tvhs-elevated px-3 py-1.5 text-[10px] font-medium text-tvhs-text-secondary transition-colors hover:bg-tvhs-hover"
           >
             <span className="font-semibold text-tvhs-accent">{preset.name}</span>
             <span className="ml-1 text-[9px] text-tvhs-text-muted">({preset.accent})</span>

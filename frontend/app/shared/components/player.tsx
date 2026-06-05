@@ -19,7 +19,6 @@ export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, o
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Sync external audioUrl to audio element and auto-play
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !audioUrl) return;
@@ -31,7 +30,6 @@ export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, o
     };
   }, [audioUrl]);
 
-  // Use timeupdate event instead of RAF for efficiency
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -40,7 +38,7 @@ export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, o
     const onLoadedMetadata = () => {
       if (isFinite(audio.duration)) setDuration(audio.duration);
     };
-    const onEnded = () => { setCurrentTime(0); };
+    const onEnded = () => setCurrentTime(0);
 
     audio.addEventListener("timeupdate", onTimeUpdate);
     audio.addEventListener("loadedmetadata", onLoadedMetadata);
@@ -53,7 +51,6 @@ export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, o
     };
   }, []);
 
-  // Sync external isPlaying state (for streaming playback)
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -69,106 +66,93 @@ export function Player({ audioUrl, isPlaying, loading, onPlayPause, onRestart, o
     : 0;
 
   return (
-    <div className="p-4" style={{ background: "var(--color-tvhs-surface)", borderTop: "1px solid var(--color-tvhs-border)" }}>
-      <div className="studio-panel relative overflow-hidden p-3">
-        <div className="flex flex-col gap-3 xl:flex-row xl:items-center">
+    <div className="shrink-0 border-t border-tvhs-border bg-tvhs-surface p-3">
+      <div className="flex min-h-[88px] flex-col gap-3 rounded-lg border border-tvhs-border bg-tvhs-main/70 p-3 xl:flex-row xl:items-center">
+        <button
+          onClick={onGenerate}
+          disabled={loading}
+          className="btn-primary min-h-11 shrink-0 px-5 py-2.5 text-sm xl:w-44"
+        >
+          {loading ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
+              <span>Đang tạo</span>
+            </>
+          ) : (
+            <>
+              <Sparkles className="h-4 w-4" />
+              <span>Tạo giọng</span>
+            </>
+          )}
+        </button>
+
+        <div className="flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-tvhs-border bg-tvhs-surface p-2.5">
           <button
-            onClick={onGenerate}
-            disabled={loading}
-            className="btn-primary shrink-0 px-5 py-3 text-sm"
+            onClick={onPlayPause}
+            disabled={!audioUrl}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-tvhs-accent-faint text-tvhs-accent transition-colors hover:bg-tvhs-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
+            title={isPlaying ? "Tạm dừng" : "Phát"}
           >
-            {loading ? (
-              <>
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black" />
-                <span>Đang tạo...</span>
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4" />
-                <span>Tạo giọng</span>
-              </>
-            )}
+            {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
           </button>
 
-          <div className="flex flex-1 items-center gap-3 rounded-xl border border-tvhs-border bg-tvhs-main p-2.5">
-            <button
-              onClick={onPlayPause}
-              disabled={!audioUrl}
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-tvhs-accent-faint text-tvhs-accent transition hover:bg-tvhs-accent/20 disabled:cursor-not-allowed disabled:opacity-40"
-              title={isPlaying ? "Tạm dừng" : "Phát"}
-            >
-              {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="ml-0.5 h-4 w-4 fill-current" />}
-            </button>
-
-            <div className="min-w-0 flex-1">
-              <div className="mb-1 flex items-center justify-between gap-3 text-[10px] text-tvhs-text-muted">
-                <span className="truncate font-medium">
-                  {loading ? "Đang tổng hợp..." : isPlaying ? "Đang phát..." : audioUrl ? "Sẵn sàng phát audio" : "Chưa có audio"}
-                </span>
-                <span className="shrink-0 font-mono tabular-nums">
-                  {formatTime(currentTime)} / {formatTime(duration)}
-                </span>
-              </div>
-
-              <div className="relative">
-                <div className={`pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-[1.5px] px-1${isPlaying ? " animate-wave" : ""}`}>
-                  {Array.from({ length: 44 }).map((_, index) => {
-                    const height = 8 + ((index * 7) % 20);
-                    const active = audioUrl && index <= Math.round((playerProgress / 100) * 43);
-                    return (
-                      <span
-                        key={index}
-                        className={`block w-[3px] rounded-full transition-all duration-200${active && isPlaying ? " animate-bar" : ""}`}
-                        style={{
-                          height: `${height}px`,
-                          background: active ? "linear-gradient(to top, rgba(197,160,89,0.4), #c5a059)" : "rgba(197, 160, 89, 0.12)",
-                          boxShadow: active ? "0 0 6px rgba(197,160,89,0.2)" : "none",
-                          animationDelay: active && isPlaying ? `${(index % 5) * 0.1}s` : "0s",
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max={duration || 100}
-                  step="0.01"
-                  value={currentTime}
-                  onChange={(e) => {
-                    const time = parseFloat(e.target.value);
-                    if (audioRef.current) audioRef.current.currentTime = time;
-                    setCurrentTime(time);
-                  }}
-                  disabled={!audioUrl}
-                  className="tts-range tvhs-wave-range relative z-10 h-9 opacity-0"
-                  aria-label="Tua audio"
-                />
-              </div>
+          <div className="min-w-0 flex-1">
+            <div className="mb-1 flex items-center justify-between gap-3 text-xs text-tvhs-text-muted">
+              <span className="truncate font-medium">
+                {loading ? "Đang tổng hợp..." : isPlaying ? "Đang phát..." : audioUrl ? "Sẵn sàng phát audio" : "Chưa có audio"}
+              </span>
+              <span className="shrink-0 font-mono tabular-nums">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </span>
             </div>
 
-            <div className="flex items-center gap-1">
-              <button
-                onClick={onRestart}
+            <div className="relative h-8">
+              <div className={`pointer-events-none absolute inset-x-0 top-1/2 flex -translate-y-1/2 items-center gap-[2px] px-1${isPlaying ? " animate-wave" : ""}`}>
+                {Array.from({ length: 48 }).map((_, index) => {
+                  const height = 7 + ((index * 7) % 20);
+                  const active = audioUrl && index <= Math.round((playerProgress / 100) * 47);
+                  return (
+                    <span
+                      key={index}
+                      className={`block w-[3px] rounded-full transition-colors duration-200${active && isPlaying ? " animate-bar" : ""}`}
+                      style={{
+                        height: `${height}px`,
+                        background: active ? "#c5a059" : "rgba(197, 160, 89, 0.14)",
+                        animationDelay: active && isPlaying ? `${(index % 5) * 0.1}s` : "0s",
+                      }}
+                    />
+                  );
+                })}
+              </div>
+              <input
+                type="range"
+                min="0"
+                max={duration || 100}
+                step="0.01"
+                value={currentTime}
+                onChange={(e) => {
+                  const time = parseFloat(e.target.value);
+                  if (audioRef.current) audioRef.current.currentTime = time;
+                  setCurrentTime(time);
+                }}
                 disabled={!audioUrl}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-tvhs-elevated text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text disabled:cursor-not-allowed disabled:opacity-40"
-                title="Phát lại từ đầu"
-              >
-                <SkipBack className="h-4 w-4" />
-              </button>
-              <button
-                onClick={onDownload}
-                disabled={!audioUrl}
-                className="flex h-9 w-9 items-center justify-center rounded-lg bg-tvhs-elevated text-tvhs-text-secondary transition hover:bg-tvhs-hover hover:text-tvhs-text disabled:cursor-not-allowed disabled:opacity-40"
-                title="Tải về"
-              >
-                <Download className="h-4 w-4" />
-              </button>
+                className="tts-range tvhs-wave-range relative z-10 h-8 opacity-0"
+                aria-label="Tua audio"
+              />
             </div>
           </div>
+
+          <div className="flex items-center gap-1">
+            <button onClick={onRestart} disabled={!audioUrl} className="tvhs-icon-button disabled:cursor-not-allowed disabled:opacity-40" title="Phát lại từ đầu">
+              <SkipBack className="h-4 w-4" />
+            </button>
+            <button onClick={onDownload} disabled={!audioUrl} className="tvhs-icon-button disabled:cursor-not-allowed disabled:opacity-40" title="Tải về">
+              <Download className="h-4 w-4" />
+            </button>
+          </div>
         </div>
-        <audio ref={audioRef} className="hidden" />
       </div>
+      <audio ref={audioRef} className="hidden" />
     </div>
   );
 }

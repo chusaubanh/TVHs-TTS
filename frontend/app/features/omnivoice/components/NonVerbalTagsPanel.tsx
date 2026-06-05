@@ -18,7 +18,7 @@ export function NonVerbalTagsPanel({ onInsertTag }: NonVerbalTagsPanelProps) {
           <button
             key={item.tag}
             onClick={() => onInsertTag(`${item.tag} `)}
-            className="rounded-lg bg-tvhs-elevated px-3 py-1.5 text-left transition hover:-translate-y-[1px] hover:bg-tvhs-hover"
+            className="rounded-lg bg-tvhs-elevated px-3 py-1.5 text-left transition-colors hover:bg-tvhs-hover"
           >
             <span className="text-[10px] font-semibold text-tvhs-accent-light">{item.label}</span>
             <span className="ml-1.5 font-mono text-[9px] text-tvhs-text-muted">{item.tag}</span>

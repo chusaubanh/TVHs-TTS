@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import {
-  Loader2, Sparkles, X, Check, RefreshCw, Volume2,
-  Upload, Plus, Trash2, Timer, Zap, Play,
+  Loader2, Sparkles, X, Check, RefreshCw, Volume2, Upload, Plus, Trash2,
+  Timer, Zap, Play, Cpu, Mic, FileAudio, MessageSquare,
 } from "lucide-react";
 import type { Voice, LoRAAdapter, HardwareInfo, AudioFile, DialogueLine } from "../../../shared/types";
 
@@ -12,43 +12,32 @@ interface Props {
   currentModel: string;
   switchingModel: boolean;
   onSwitchModel: (t: string) => void;
-
   emotion: string;
   onEmotionChange: (e: string) => void;
-
   voices: Voice[];
   voicesLoading: boolean;
   selectedVoice: string;
   onVoiceChange: (v: string) => void;
-
   silenceP: number;
   onSilenceChange: (v: number) => void;
-
   audioHistory: AudioFile[];
   onPlayHistory: (f: string) => void;
-
   loras: LoRAAdapter[];
   activeLora: string | null;
   loraLoading: boolean;
   onLoadLora: (id: string, downloaded: boolean) => void;
   onUnloadLora: () => void;
-
   hardwareInfo: HardwareInfo | null;
   detecting: boolean;
   onDetectHardware: () => void;
-
-  // Clone
   refFile: File | null;
   refText: string;
   onRefFileChange: (f: File | null) => void;
   onRefTextChange: (t: string) => void;
-
-  // Dialogue
   dialogueLines: DialogueLine[];
   onAddLine: () => void;
   onRemoveLine: (id: number) => void;
   onUpdateLine: (id: number, field: keyof DialogueLine, value: string | number) => void;
-
   onRefresh: () => void;
 }
 
@@ -69,267 +58,261 @@ export function Sidebar(props: Props) {
   const [showHistory, setShowHistory] = useState(false);
   const [showLoraPanel, setShowLoraPanel] = useState(false);
 
-  const getVoiceEmoji = (name: string) => {
-    if (name.includes("nam")) return "👨";
-    if (name.includes("nữ") || name.includes("nu")) return "👩";
-    return "🎙️";
-  };
-
   return (
-    <aside className="flex h-full w-[340px] min-w-[340px] max-w-[340px] flex-col gap-4 overflow-hidden p-4" style={{ background: "var(--color-tvhs-surface)", borderRight: "1px solid var(--color-tvhs-border)", borderBottom: "1px solid var(--color-tvhs-border)" }}>
-      {/* LoRA Section */}
-      <div className="rounded-xl p-3 transition-opacity" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)", opacity: currentModel !== "pytorch" ? 0.5 : 1 }}>
-        <button onClick={() => setShowLoraPanel(!showLoraPanel)} className="flex w-full items-center justify-between text-left">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4" style={{ color: "#a78bfa" }} />
-            <span className="text-sm font-semibold text-tvhs-text-secondary">LoRA Adapter</span>
-          </div>
-          <span className="rounded px-1.5 py-0.5 text-[9px] font-medium" style={{ background: currentModel === "pytorch" ? "rgba(167, 139, 250, 0.15)" : "var(--color-tvhs-elevated)", color: currentModel === "pytorch" ? "#a78bfa" : "var(--color-tvhs-text-muted)" }}>
-            {currentModel === "pytorch" ? "Sẵn sàng" : "Cần GPU"}
-          </span>
+    <aside className="flex h-full w-[336px] min-w-[336px] max-w-[336px] flex-col overflow-hidden border-r border-tvhs-border bg-tvhs-surface">
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-tvhs-border px-4">
+        <div className="flex items-center gap-2">
+          <Cpu className="h-4 w-4 text-tvhs-accent" />
+          <span className="text-sm font-semibold text-tvhs-text">Điều khiển</span>
+        </div>
+        <button onClick={onRefresh} className="tvhs-icon-button !h-8 !w-8" title="Làm mới">
+          <RefreshCw className="h-4 w-4" />
         </button>
-
-        {showLoraPanel && (
-          <div className="mt-3 space-y-2">
-            {currentModel !== "pytorch" && (
-              <div className="rounded-lg p-3" style={{ background: "rgba(245, 158, 11, 0.1)", border: "1px solid rgba(245, 158, 11, 0.3)" }}>
-                <p className="text-[11px] font-medium" style={{ color: "#f59e0b" }}>Cần chuyển sang model PyTorch</p>
-                <p className="mt-1 text-[10px] text-tvhs-text-muted">GGUF không hỗ trợ LoRA. Bấm nút GPU ở mục Model để chuyển.</p>
-              </div>
-            )}
-            {loras.map((lora) => (
-              <div
-                key={lora.id}
-                className="flex items-center justify-between rounded-lg p-2.5 transition-all"
-                style={{ background: activeLora === lora.id ? "rgba(167, 139, 250, 0.1)" : "transparent", border: `1px solid ${activeLora === lora.id ? "rgba(167, 139, 250, 0.3)" : "var(--color-tvhs-border)"}`, cursor: currentModel !== "pytorch" ? "not-allowed" : "pointer", opacity: currentModel !== "pytorch" ? 0.5 : 1 }}
-                onClick={() => {
-                  if (currentModel !== "pytorch") return;
-                  if (activeLora === lora.id) onUnloadLora();
-                  else onLoadLora(lora.id, lora.downloaded ?? lora.source === "local");
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-md text-xs" style={{ background: activeLora === lora.id ? "#a78bfa" : "var(--color-tvhs-elevated)", color: activeLora === lora.id ? "#fff" : "var(--color-tvhs-text-muted)" }}>
-                    {activeLora === lora.id ? <Check className="h-3 w-3" /> : lora.name[0]}
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-tvhs-text">{lora.name}</p>
-                    <p className="text-[10px] text-tvhs-text-muted">{lora.downloaded || lora.source === "local" ? "Đã tải" : "Chưa tải"}</p>
-                  </div>
-                </div>
-                {loraLoading && <Loader2 className="h-3 w-3 animate-spin text-tvhs-text-muted" />}
-              </div>
-            ))}
-            {activeLora && (
-              <button onClick={onUnloadLora} disabled={loraLoading} className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs transition-colors" style={{ color: "var(--color-tvhs-danger)" }}>
-                <X className="h-3 w-3" />
-                Gỡ LoRA
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto">
-        {/* Model Selector */}
-        <div className="rounded-lg p-2.5" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
-          <h3 className="mb-2 text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Model</h3>
-          <div className="grid grid-cols-3 gap-1">
+      <div className="flex-1 overflow-y-auto p-3">
+        <SidebarSection title="LoRA Adapter">
+          <button
+            onClick={() => setShowLoraPanel(!showLoraPanel)}
+            className="flex min-h-10 w-full items-center justify-between rounded-lg border border-tvhs-border bg-tvhs-main/55 px-3 text-left transition-colors hover:bg-tvhs-elevated"
+          >
+            <span className="flex items-center gap-2 text-sm font-medium text-tvhs-text-secondary">
+              <Sparkles className="h-4 w-4 text-tvhs-accent" />
+              {activeLora || "Chưa bật adapter"}
+            </span>
+            <span className="rounded bg-tvhs-accent-faint px-2 py-1 text-[10px] font-semibold text-tvhs-accent">
+              {currentModel === "pytorch" ? "Sẵn sàng" : "Cần GPU"}
+            </span>
+          </button>
+
+          {showLoraPanel && (
+            <div className="mt-2 space-y-2">
+              {currentModel !== "pytorch" && (
+                <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-xs leading-5 text-amber-200">
+                  LoRA chỉ chạy với PyTorch. Chuyển sang GPU trước khi bật adapter.
+                </div>
+              )}
+              {loras.length === 0 ? (
+                <p className="rounded-lg border border-tvhs-border bg-tvhs-main/55 p-3 text-xs text-tvhs-text-muted">Chưa có LoRA nào.</p>
+              ) : (
+                loras.map((lora) => (
+                  <button
+                    key={lora.id}
+                    disabled={currentModel !== "pytorch" || loraLoading}
+                    className={`flex min-h-11 w-full items-center justify-between rounded-lg border px-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${activeLora === lora.id ? "border-tvhs-accent/40 bg-tvhs-accent-faint" : "border-tvhs-border bg-tvhs-main/55 hover:bg-tvhs-elevated"}`}
+                    onClick={() => activeLora === lora.id ? onUnloadLora() : onLoadLora(lora.id, lora.downloaded ?? lora.source === "local")}
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-xs font-semibold text-tvhs-text">{lora.name}</span>
+                      <span className="block text-[10px] text-tvhs-text-muted">{lora.downloaded || lora.source === "local" ? "Đã tải" : "Chưa tải"}</span>
+                    </span>
+                    {activeLora === lora.id ? <Check className="h-4 w-4 text-tvhs-accent" /> : loraLoading ? <Loader2 className="h-4 w-4 animate-spin text-tvhs-text-muted" /> : null}
+                  </button>
+                ))
+              )}
+              {activeLora && (
+                <button onClick={onUnloadLora} disabled={loraLoading} className="flex min-h-9 w-full items-center justify-center gap-2 rounded-lg text-xs font-semibold text-tvhs-danger transition-colors hover:bg-red-500/10">
+                  <X className="h-4 w-4" />
+                  Gỡ LoRA
+                </button>
+              )}
+            </div>
+          )}
+        </SidebarSection>
+
+        <SidebarSection title="Model">
+          <div className="grid grid-cols-3 gap-1.5">
             {[
               { id: "gguf", name: "CPU", desc: "GGUF Q4" },
               { id: "pytorch", name: "GPU", desc: "PyTorch" },
-              { id: "turbo", name: "Turbo", desc: "0.1B" },
+              { id: "turbo", name: "Turbo", desc: "Nhanh" },
             ].map((m) => (
               <button
                 key={m.id}
                 onClick={() => onSwitchModel(m.id)}
                 disabled={switchingModel}
-                className="rounded-md px-2 py-1.5 text-[10px] font-medium transition-all disabled:opacity-50"
-                style={{ background: currentModel === m.id ? "linear-gradient(135deg, #c5a059, #e0c286)" : "var(--color-tvhs-elevated)", color: currentModel === m.id ? "#000" : "var(--color-tvhs-text-secondary)", boxShadow: currentModel === m.id ? "0 2px 12px rgba(197, 160, 89, 0.3)" : "none" }}
+                className={`min-h-[48px] rounded-lg border px-2 text-center transition-colors disabled:opacity-50 ${currentModel === m.id ? "border-tvhs-accent bg-tvhs-accent text-black" : "border-tvhs-border bg-tvhs-elevated text-tvhs-text-secondary hover:bg-tvhs-hover"}`}
               >
                 {switchingModel && currentModel !== m.id ? (
-                  <Loader2 className="mx-auto h-3 w-3 animate-spin" />
+                  <Loader2 className="mx-auto h-4 w-4 animate-spin" />
                 ) : (
                   <>
-                    <div className="font-bold">{m.name}</div>
-                    <div className="text-[8px] opacity-70">{m.desc}</div>
+                    <div className="text-xs font-bold">{m.name}</div>
+                    <div className="text-[10px] opacity-70">{m.desc}</div>
                   </>
                 )}
               </button>
             ))}
           </div>
-          <button onClick={onDetectHardware} disabled={detecting} className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-md py-1.5 text-[10px] font-medium transition-all" style={{ color: "var(--color-tvhs-text-muted)", border: "1px dashed var(--color-tvhs-border)" }}>
-            {detecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+          <button onClick={onDetectHardware} disabled={detecting} className="mt-2 flex min-h-9 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-tvhs-border text-xs font-semibold text-tvhs-text-muted transition-colors hover:bg-tvhs-elevated hover:text-tvhs-text">
+            {detecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
             {detecting ? "Đang quét..." : "Tự động phát hiện phần cứng"}
           </button>
-          {hardwareInfo && (
-            <div className="mt-2 space-y-1 rounded-md p-2" style={{ background: "var(--color-tvhs-elevated)", border: "1px solid var(--color-tvhs-border)" }}>
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] text-tvhs-text-muted">CPU</span>
-                <span className="max-w-[150px] truncate text-[9px] font-medium text-tvhs-text-secondary">{hardwareInfo.cpu}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] text-tvhs-text-muted">RAM</span>
-                <span className="text-[9px] font-medium text-tvhs-text-secondary">{hardwareInfo.ram_gb} GB</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[9px] text-tvhs-text-muted">GPU</span>
-                <span className="text-[9px] font-medium text-tvhs-text-secondary">{hardwareInfo.gpu_name || "Không có"}</span>
-              </div>
-              {hardwareInfo.vram_gb > 0 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-[9px] text-tvhs-text-muted">VRAM</span>
-                  <span className="text-[9px] font-medium text-tvhs-text-secondary">{hardwareInfo.vram_gb} GB</span>
-                </div>
-              )}
-              <div className="mt-1 pt-1" style={{ borderTop: "1px solid var(--color-tvhs-border)" }}>
-                <div className="flex items-center gap-1.5">
-                  <Zap className="h-3 w-3 text-tvhs-success" />
-                  <span className="text-[9px] font-semibold text-tvhs-success">
-                    Khuyến nghị: {hardwareInfo.recommendation === "pytorch" ? "GPU (PyTorch)" : hardwareInfo.recommendation === "gguf" ? "CPU (GGUF)" : "Turbo"}
-                  </span>
-                </div>
-                <p className="mt-0.5 text-[8px] text-tvhs-text-muted">{hardwareInfo.reason}</p>
-                {hardwareInfo.recommendation !== currentModel && (
-                  <button onClick={() => onSwitchModel(hardwareInfo.recommendation)} className="mt-1.5 w-full rounded-md py-1.5 text-[10px] font-medium transition-all" style={{ background: "var(--color-tvhs-success)", color: "#fff" }}>
-                    Chuyển sang {hardwareInfo.recommendation === "pytorch" ? "GPU" : hardwareInfo.recommendation === "gguf" ? "CPU" : "Turbo"}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
+          {hardwareInfo && <HardwareSummary hardwareInfo={hardwareInfo} currentModel={currentModel} onSwitchModel={onSwitchModel} />}
+        </SidebarSection>
 
-        {/* Preset Mode */}
         {mode === "preset" && (
           <>
-            <div className="rounded-lg p-2.5" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
-              <h3 className="mb-2 text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Phong cách</h3>
+            <SidebarSection title="Phong cách">
               <div className="grid grid-cols-2 gap-1.5">
-                {["natural", "storytelling"].map((e) => (
-                  <button key={e} onClick={() => onEmotionChange(e)} className="rounded-md px-2 py-1.5 text-[11px] font-medium transition-all" style={{ background: emotion === e ? "linear-gradient(135deg, #c5a059, #e0c286)" : "var(--color-tvhs-elevated)", color: emotion === e ? "#000" : "var(--color-tvhs-text-secondary)" }}>
-                    {e === "natural" ? "Tự nhiên" : "Kể chuyện"}
+                {[
+                  { id: "natural", label: "Tự nhiên" },
+                  { id: "storytelling", label: "Kể chuyện" },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => onEmotionChange(item.id)}
+                    className={`min-h-9 rounded-lg border text-xs font-semibold transition-colors ${emotion === item.id ? "border-tvhs-accent bg-tvhs-accent text-black" : "border-tvhs-border bg-tvhs-elevated text-tvhs-text-secondary hover:bg-tvhs-hover"}`}
+                  >
+                    {item.label}
                   </button>
                 ))}
               </div>
-            </div>
+            </SidebarSection>
 
-            <div className="rounded-lg p-2.5" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
-              <h3 className="mb-2 text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Giọng nói</h3>
+            <SidebarSection title="Giọng nói">
               {voicesLoading ? (
-                <div className="flex items-center justify-center gap-2 p-3 text-tvhs-text-muted">
-                  <Loader2 className="h-3 w-3 animate-spin" />
-                  <span className="text-xs">Đang tải...</span>
+                <div className="flex min-h-10 items-center justify-center gap-2 text-xs text-tvhs-text-muted">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Đang tải...
                 </div>
               ) : (
-                <select value={selectedVoice} onChange={(e) => onVoiceChange(e.target.value)} className="tts-select">
-                  {voices.map((v) => (
-                    <option key={v.id} value={v.id}>{getVoiceEmoji(v.name)} {v.name}</option>
-                  ))}
+                <select value={selectedVoice} onChange={(e) => onVoiceChange(e.target.value)} className="tts-select min-h-10">
+                  {voices.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                 </select>
               )}
-            </div>
+            </SidebarSection>
 
-            <div className="rounded-lg p-2.5" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
-              <div className="mb-1.5 flex items-center gap-1.5">
-                <Volume2 className="h-3 w-3 text-tvhs-text-muted" />
-                <span className="text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Im lặng: {silenceP}s</span>
+            <SidebarSection title={`Im lặng: ${silenceP}s`}>
+              <div className="flex items-center gap-2">
+                <Volume2 className="h-4 w-4 text-tvhs-text-muted" />
+                <input type="range" min="0" max="1" step="0.05" value={silenceP} onChange={(e) => onSilenceChange(parseFloat(e.target.value))} className="tts-range" />
               </div>
-              <input type="range" min="0" max="1" step="0.05" value={silenceP} onChange={(e) => onSilenceChange(parseFloat(e.target.value))} className="tts-range" />
-            </div>
+            </SidebarSection>
 
-            {/* Audio History */}
-            <div className="rounded-lg p-2.5" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
-              <button onClick={() => setShowHistory(!showHistory)} className="flex w-full items-center justify-between text-left">
-                <h3 className="text-[9px] font-medium uppercase tracking-wider text-tvhs-text-muted">Lịch sử ({audioHistory.length})</h3>
-                <span className="text-[9px] text-tvhs-text-muted">{showHistory ? "▲" : "▼"}</span>
+            <SidebarSection title={`Lịch sử (${audioHistory.length})`}>
+              <button onClick={() => setShowHistory(!showHistory)} className="flex min-h-9 w-full items-center justify-between rounded-lg border border-tvhs-border bg-tvhs-main/55 px-3 text-xs text-tvhs-text-secondary transition-colors hover:bg-tvhs-elevated">
+                File đã tạo gần đây
+                <span>{showHistory ? "Ẩn" : "Mở"}</span>
               </button>
               {showHistory && (
-                <div className="mt-2 max-h-40 space-y-1 overflow-y-auto">
+                <div className="mt-2 max-h-44 space-y-1 overflow-y-auto">
                   {audioHistory.length === 0 ? (
-                    <p className="py-2 text-center text-[10px] text-tvhs-text-muted">Chưa có audio nào</p>
+                    <p className="rounded-lg border border-tvhs-border bg-tvhs-main/55 p-3 text-center text-xs text-tvhs-text-muted">Chưa có audio nào.</p>
                   ) : (
                     audioHistory.slice(0, 10).map((file) => (
-                      <div key={file.filename} onClick={() => onPlayHistory(file.filename)} className="flex cursor-pointer items-center gap-2 rounded-md p-1.5 transition-colors hover:bg-tvhs-hover">
-                        <Play className="h-3 w-3 text-tvhs-text-muted" />
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-[10px] text-tvhs-text-secondary">{file.filename.replace(".wav", "")}</p>
-                          <p className="text-[8px] text-tvhs-text-muted">{file.size_kb}KB</p>
-                        </div>
-                      </div>
+                      <button key={file.filename} onClick={() => onPlayHistory(file.filename)} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2 text-left transition-colors hover:bg-tvhs-elevated">
+                        <Play className="h-4 w-4 shrink-0 text-tvhs-accent" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-xs text-tvhs-text-secondary">{file.filename.replace(".wav", "")}</span>
+                          <span className="block text-[10px] text-tvhs-text-muted">{file.size_kb} KB</span>
+                        </span>
+                      </button>
                     ))
                   )}
                 </div>
               )}
-            </div>
+            </SidebarSection>
           </>
         )}
 
-        {/* Clone Mode */}
         {mode === "clone" && (
-          <>
-            <h2 className="mt-1 text-xs font-bold uppercase tracking-widest text-tvhs-text-muted">Voice Cloning</h2>
-            <div className="flex flex-col gap-4">
-              <div className="relative flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl p-6 text-center transition-colors" style={{ border: "2px dashed var(--color-tvhs-border)", background: "var(--color-tvhs-elevated)" }}>
-                <input type="file" accept="audio/*" className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => onRefFileChange(e.target.files?.[0] || null)} />
-                <Upload className="h-8 w-8 text-tvhs-text-muted" />
-                <span className="text-sm font-medium text-tvhs-text-secondary">{refFile ? refFile.name : "Tải lên audio tham chiếu"}</span>
-                <span className="text-[10px] text-tvhs-text-muted">WAV, MP3 (3-10s)</span>
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="text-xs font-medium text-tvhs-text-secondary">Văn bản tham chiếu</label>
-                <textarea className="tts-textarea" rows={3} placeholder="Nhập chính xác nội dung audio trên..." value={refText} onChange={(e) => onRefTextChange(e.target.value)} />
-                <p className="text-[10px] text-tvhs-text-muted">Văn bản phải khớp 100% với audio.</p>
-              </div>
+          <SidebarSection title="Voice clone">
+            <label className="relative flex min-h-32 cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border border-dashed border-tvhs-border bg-tvhs-main/55 p-4 text-center transition-colors hover:bg-tvhs-elevated">
+              <input type="file" accept="audio/*" className="absolute inset-0 cursor-pointer opacity-0" onChange={(e) => onRefFileChange(e.target.files?.[0] || null)} />
+              <Upload className="h-7 w-7 text-tvhs-accent" />
+              <span className="max-w-full truncate text-sm font-medium text-tvhs-text-secondary">{refFile ? refFile.name : "Chọn audio tham chiếu"}</span>
+              <span className="text-xs text-tvhs-text-muted">WAV, MP3, FLAC</span>
+            </label>
+            <div className="mt-3">
+              <label className="mb-2 block text-xs font-semibold text-tvhs-text-secondary">Văn bản tham chiếu</label>
+              <textarea className="tts-textarea" rows={4} placeholder="Nhập chính xác nội dung trong audio..." value={refText} onChange={(e) => onRefTextChange(e.target.value)} />
             </div>
-          </>
+          </SidebarSection>
         )}
 
-        {/* Dialogue Mode */}
         {mode === "dialogue" && (
-          <>
-            <h2 className="mt-1 text-xs font-bold uppercase tracking-widest text-tvhs-text-muted">Đối thoại ({dialogueLines.length} dòng)</h2>
-            <div className="flex flex-col gap-3">
+          <SidebarSection title={`Đối thoại (${dialogueLines.length} dòng)`}>
+            <div className="space-y-2">
               {dialogueLines.map((line, index) => (
-                <div key={line.id} className="space-y-2 rounded-xl p-3" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold uppercase text-tvhs-text-muted">Dòng {index + 1}</span>
-                    <button onClick={() => onRemoveLine(line.id)} className="rounded p-1 text-tvhs-text-muted transition-colors"><Trash2 className="h-3 w-3" /></button>
+                <div key={line.id} className="rounded-lg border border-tvhs-border bg-tvhs-main/55 p-3">
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-xs font-semibold text-tvhs-text-secondary">Dòng {index + 1}</span>
+                    <button onClick={() => onRemoveLine(line.id)} className="tvhs-icon-button !h-7 !w-7" title="Xóa dòng">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
-                  <select value={line.voice} onChange={(e) => onUpdateLine(line.id, "voice", e.target.value)} className="tts-select">
-                    {voices.map((v) => (<option key={v.id} value={v.id}>{v.name}</option>))}
+                  <select value={line.voice} onChange={(e) => onUpdateLine(line.id, "voice", e.target.value)} className="tts-select mb-2 min-h-9">
+                    {voices.map((v) => <option key={v.id} value={v.id}>{v.name}</option>)}
                   </select>
-                  <select value={line.emotion} onChange={(e) => onUpdateLine(line.id, "emotion", e.target.value)} className="tts-select">
+                  <select value={line.emotion} onChange={(e) => onUpdateLine(line.id, "emotion", e.target.value)} className="tts-select mb-2 min-h-9">
                     <option value="natural">Tự nhiên</option>
                     <option value="storytelling">Kể chuyện</option>
                   </select>
-                  <textarea value={line.text} onChange={(e) => onUpdateLine(line.id, "text", e.target.value)} placeholder="Nhập nội dung..." className="tts-textarea" rows={2} />
+                  <textarea value={line.text} onChange={(e) => onUpdateLine(line.id, "text", e.target.value)} placeholder="Nhập nội dung..." className="tts-textarea mb-2" rows={2} />
                   <div className="flex items-center gap-2">
-                    <Timer className="h-3 w-3 text-tvhs-text-muted" />
-                    <span className="text-[10px] text-tvhs-text-muted">Dừng sau:</span>
+                    <Timer className="h-4 w-4 text-tvhs-text-muted" />
                     <input type="range" min="0" max="3" step="0.1" value={line.pauseAfter} onChange={(e) => onUpdateLine(line.id, "pauseAfter", parseFloat(e.target.value))} className="tts-range flex-1" />
-                    <span className="w-8 font-mono text-[10px] text-tvhs-text-secondary">{line.pauseAfter}s</span>
+                    <span className="w-9 text-right font-mono text-xs text-tvhs-text-secondary">{line.pauseAfter}s</span>
                   </div>
                 </div>
               ))}
-              <button onClick={onAddLine} className="flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs transition-all" style={{ border: "1px dashed var(--color-tvhs-border)", color: "var(--color-tvhs-text-muted)" }}>
-                <Plus className="h-3.5 w-3.5" />
+              <button onClick={onAddLine} className="flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-dashed border-tvhs-border text-xs font-semibold text-tvhs-text-secondary transition-colors hover:bg-tvhs-elevated hover:text-tvhs-text">
+                <Plus className="h-4 w-4" />
                 Thêm dòng
               </button>
             </div>
-          </>
+          </SidebarSection>
         )}
       </div>
 
-      <div className="mt-auto pt-3" style={{ borderTop: "1px solid var(--color-tvhs-border)" }}>
-        <div className="flex items-center justify-between text-[10px] text-tvhs-text-muted">
-          <div className="flex items-center gap-1">
-            <Zap className="h-2.5 w-2.5 text-tvhs-success" />
-            <span>Sẵn sàng</span>
-          </div>
-          <button onClick={onRefresh} className="text-tvhs-text-muted transition-colors hover:text-tvhs-text"><RefreshCw className="h-3 w-3" /></button>
-        </div>
+      <div className="flex h-11 shrink-0 items-center justify-between border-t border-tvhs-border px-4 text-xs text-tvhs-text-muted">
+        <span className="flex items-center gap-2">
+          <Zap className="h-3.5 w-3.5 text-tvhs-success" />
+          Sẵn sàng
+        </span>
+        <span>{mode === "preset" ? <Mic className="h-4 w-4" /> : mode === "clone" ? <FileAudio className="h-4 w-4" /> : <MessageSquare className="h-4 w-4" />}</span>
       </div>
     </aside>
+  );
+}
+
+function SidebarSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="mb-3 rounded-lg border border-tvhs-border bg-tvhs-surface p-3">
+      <h3 className="mb-2 text-[11px] font-bold uppercase tracking-wide text-tvhs-text-muted">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function HardwareSummary({ hardwareInfo, currentModel, onSwitchModel }: { hardwareInfo: HardwareInfo; currentModel: string; onSwitchModel: (t: string) => void }) {
+  return (
+    <div className="mt-2 rounded-lg border border-tvhs-border bg-tvhs-main/55 p-3">
+      <InfoRow label="CPU" value={hardwareInfo.cpu} />
+      <InfoRow label="RAM" value={`${hardwareInfo.ram_gb} GB`} />
+      <InfoRow label="GPU" value={hardwareInfo.gpu_name || "Không có"} />
+      {hardwareInfo.vram_gb > 0 && <InfoRow label="VRAM" value={`${hardwareInfo.vram_gb} GB`} />}
+      <div className="mt-2 border-t border-tvhs-border pt-2">
+        <p className="text-xs font-semibold text-tvhs-success">
+          Khuyến nghị: {hardwareInfo.recommendation === "pytorch" ? "GPU" : hardwareInfo.recommendation === "gguf" ? "CPU" : "Turbo"}
+        </p>
+        <p className="mt-1 text-[11px] leading-4 text-tvhs-text-muted">{hardwareInfo.reason}</p>
+        {hardwareInfo.recommendation !== currentModel && (
+          <button onClick={() => onSwitchModel(hardwareInfo.recommendation)} className="mt-2 min-h-8 w-full rounded-lg bg-tvhs-success px-3 text-xs font-semibold text-white">
+            Chuyển model
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1 text-xs">
+      <span className="text-tvhs-text-muted">{label}</span>
+      <span className="min-w-0 truncate text-right font-medium text-tvhs-text-secondary">{value}</span>
+    </div>
   );
 }
