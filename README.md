@@ -1,16 +1,18 @@
 <div align="center">
 
-# Thành Vinh Studio
+<img src="assets/company-favicon.webp" alt="ThanhVinh Studio" width="128" height="128" />
 
-**Ứng dụng tổng hợp giọng nói tiếng Việt chạy offline trên máy tính**
+# TVHs TTS — ThanhVinh Studio
 
-![License](https://img.shields.io/badge/license-Private-red)
+**Ứng dụng tổng hợp giọng nói tiếng Việt chạy local-first trên máy tính**
+
+![License](https://img.shields.io/badge/license-Apache--2.0-blue)
 ![Python](https://img.shields.io/badge/python-3.10+-blue?logo=python&logoColor=white)
 ![Next.js](https://img.shields.io/badge/next.js-15-black?logo=next.js&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/fastapi-0.110+-009688?logo=fastapi&logoColor=white)
 ![Status](https://img.shields.io/badge/status-stable-brightgreen)
 
-<p>Tổng hợp giọng nói tiếng Việt chất lượng cao với voice cloning, dialogue nhiều giọng, và quản lý LoRA — chạy offline sau khi đã tải đủ model lần đầu.</p>
+<p>Tổng hợp giọng nói tiếng Việt chất lượng cao với preset voice, voice cloning, dialogue nhiều giọng và quản lý model. Ứng dụng chạy trên máy người dùng sau khi tải model lần đầu.</p>
 
 </div>
 
