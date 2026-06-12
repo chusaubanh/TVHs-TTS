@@ -179,6 +179,26 @@ export function OmniVoicePanel(props: OmniVoicePanelProps) {
           <input type="range" min="0.5" max="2.0" step="0.1" value={ovSpeed} onChange={(e) => setOvSpeed(parseFloat(e.target.value))} className="tts-range" />
         </div>
 
+        {ovMode === "tts" && (
+          <>
+            <VoiceDesignPanel
+              gender={ovVoiceGender}
+              age={ovVoiceAge}
+              pitch={ovVoicePitch}
+              accent={ovVoiceAccent}
+              style={ovVoiceStyle}
+              instruct={ovInstruct}
+              onGenderChange={setOvVoiceGender}
+              onAgeChange={setOvVoiceAge}
+              onPitchChange={setOvVoicePitch}
+              onAccentChange={setOvVoiceAccent}
+              onStyleChange={setOvVoiceStyle}
+            />
+
+            <NonVerbalTagsPanel onInsertTag={insertAtCursor} />
+          </>
+        )}
+
         {/* Status */}
         <div className="mt-auto pt-3" style={{ borderTop: "1px solid var(--color-tvhs-border)" }}>
           <div className="flex items-center gap-1">
@@ -214,22 +234,6 @@ export function OmniVoicePanel(props: OmniVoicePanelProps) {
         <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-5" style={{ background: "var(--color-tvhs-main)" }}>
           {ovMode === "tts" && (
             <>
-              <VoiceDesignPanel
-                gender={ovVoiceGender}
-                age={ovVoiceAge}
-                pitch={ovVoicePitch}
-                accent={ovVoiceAccent}
-                style={ovVoiceStyle}
-                instruct={ovInstruct}
-                onGenderChange={setOvVoiceGender}
-                onAgeChange={setOvVoiceAge}
-                onPitchChange={setOvVoicePitch}
-                onAccentChange={setOvVoiceAccent}
-                onStyleChange={setOvVoiceStyle}
-              />
-
-              <NonVerbalTagsPanel onInsertTag={insertAtCursor} />
-
               {/* Textarea */}
               <div className="flex flex-1 flex-col gap-2">
                 <div className="flex items-center justify-between">

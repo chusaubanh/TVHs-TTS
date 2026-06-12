@@ -1,5 +1,4 @@
 import { SlidersHorizontal } from "lucide-react";
-
 import { VOICE_ACCENTS, VOICE_AGES, VOICE_GENDERS, VOICE_PITCHES, VOICE_PRESETS, VOICE_STYLES } from "../constants";
 
 interface VoiceDesignPanelProps {
@@ -44,14 +43,14 @@ export function VoiceDesignPanel({
   };
 
   return (
-    <div className="studio-panel flex flex-col gap-3.5 p-4">
-      <div className="flex items-center gap-2 text-xs font-bold text-tvhs-text uppercase tracking-wide">
-        <SlidersHorizontal className="h-4 w-4 text-tvhs-accent" />
+    <div className="rounded-lg p-2.5 flex flex-col gap-3" style={{ background: "var(--color-tvhs-surface)", border: "1px solid var(--color-tvhs-border)" }}>
+      <div className="flex items-center gap-1.5 text-[10px] font-bold text-tvhs-text uppercase tracking-wide">
+        <SlidersHorizontal className="h-3.5 w-3.5 text-tvhs-accent" />
         Thiết lập giọng nói
       </div>
-      <div className="grid grid-cols-2 gap-3.5 sm:grid-cols-3 lg:grid-cols-5">
+      <div className="grid grid-cols-2 gap-2">
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Giới tính</span>
+          <span className="text-[9px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Giới tính</span>
           <select value={gender} onChange={(event) => onGenderChange(event.target.value)} className="tts-select">
             {VOICE_GENDERS.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
@@ -59,7 +58,7 @@ export function VoiceDesignPanel({
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Độ tuổi</span>
+          <span className="text-[9px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Độ tuổi</span>
           <select value={age} onChange={(event) => onAgeChange(event.target.value)} className="tts-select">
             {VOICE_AGES.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
@@ -67,7 +66,7 @@ export function VoiceDesignPanel({
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Cao độ</span>
+          <span className="text-[9px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Cao độ</span>
           <select value={pitch} onChange={(event) => onPitchChange(event.target.value)} className="tts-select">
             <option value="">Mặc định</option>
             {VOICE_PITCHES.map((option) => (
@@ -76,15 +75,15 @@ export function VoiceDesignPanel({
           </select>
         </div>
         <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Giọng / Accent</span>
+          <span className="text-[9px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Giọng / Accent</span>
           <select value={accent} onChange={(event) => onAccentChange(event.target.value)} className="tts-select">
             {VOICE_ACCENTS.map((option) => (
               <option key={option.label} value={option.value}>{option.label}</option>
             ))}
           </select>
         </div>
-        <div className="flex flex-col gap-1.5">
-          <span className="text-[10px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Chất giọng</span>
+        <div className="flex flex-col gap-1.5 col-span-2">
+          <span className="text-[9px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Chất giọng</span>
           <select value={style} onChange={(event) => onStyleChange(event.target.value)} className="tts-select">
             {VOICE_STYLES.map((option) => (
               <option key={option.label} value={option.value}>{option.label}</option>
@@ -94,25 +93,25 @@ export function VoiceDesignPanel({
       </div>
 
       <div className="flex flex-col gap-1.5">
-        <span className="text-[10px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Prompt giọng tự động (instruct)</span>
+        <span className="text-[9px] font-semibold text-tvhs-text-muted uppercase tracking-wider">Prompt giọng tự động (instruct)</span>
         <input
           type="text"
           value={instruct}
           disabled
-          className="w-full rounded-md border border-tvhs-border bg-tvhs-elevated/40 px-3 py-2 text-xs text-tvhs-text-secondary outline-none opacity-80"
+          className="w-full rounded-md border border-tvhs-border bg-tvhs-elevated/40 px-3 py-2 text-[11px] text-tvhs-text-secondary outline-none opacity-80"
           placeholder="female, young adult, moderate pitch"
         />
       </div>
 
-      <div className="mt-1 flex flex-wrap gap-2">
+      <div className="mt-1 flex flex-wrap gap-1.5">
         {VOICE_PRESETS.map((preset) => (
           <button
             key={preset.name}
             onClick={() => applyPreset(preset.hint)}
-            className="rounded-lg bg-tvhs-elevated px-3 py-1.5 text-[10px] font-medium text-tvhs-text-secondary transition-colors hover:bg-tvhs-hover"
+            className="rounded bg-tvhs-elevated px-2 py-1 text-[9px] font-medium text-tvhs-text-secondary transition-colors hover:bg-tvhs-hover"
           >
             <span className="font-semibold text-tvhs-accent">{preset.name}</span>
-            <span className="ml-1 text-[9px] text-tvhs-text-muted">({preset.accent})</span>
+            <span className="ml-1 text-[8px] text-tvhs-text-muted">({preset.accent})</span>
           </button>
         ))}
       </div>

@@ -21,9 +21,11 @@ $ProgressPreference = 'SilentlyContinue'
 $appData = $env:TVS_APP_DIR.TrimEnd('\')
 $modelsDir = Join-Path $appData 'models'
 $baseDir = Join-Path $modelsDir 'base\VieNeu-TTS-v2-gguf'
+$v3Dir = Join-Path $modelsDir 'base\VieNeu-TTS-v3-Turbo'
 $omnivoiceDir = Join-Path $modelsDir 'omnivoice'
 
 New-Item -ItemType Directory -Force -Path $baseDir | Out-Null
+New-Item -ItemType Directory -Force -Path $v3Dir | Out-Null
 New-Item -ItemType Directory -Force -Path $omnivoiceDir | Out-Null
 
 function Download-File($url, $dest) {
@@ -70,6 +72,7 @@ Write-Host $modelsDir
 Write-Host ""
 
 Download-HfRepo 'pnnbao-ump/VieNeu-TTS-v2' $baseDir @('*.gguf', 'voices.json')
+Download-HfRepo 'pnnbao-ump/VieNeu-TTS-v3-Turbo' $v3Dir @('*.safetensors', '*.onnx', '*.data', '*.npz', '*.json')
 
 $gguf = Join-Path $baseDir 'VieNeu-TTS-v2-Q4-K-M.gguf'
 if (-not (Test-Path $gguf)) {

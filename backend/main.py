@@ -57,12 +57,13 @@ def create_app() -> FastAPI:
     )
 
     # Register API routers (BEFORE static file catch-all)
-    from backend.routers import system, downloads, models_lora, audio, omnivoice
+    from backend.routers import system, downloads, models_lora, audio, omnivoice, v3_router
     app.include_router(system.router)
     app.include_router(downloads.router)
     app.include_router(models_lora.router)
     app.include_router(audio.router)
     app.include_router(omnivoice.router)
+    app.include_router(v3_router.router)
 
     # Mount static files (must be LAST — contains catch-all GET route)
     from backend.static import mount_static_files

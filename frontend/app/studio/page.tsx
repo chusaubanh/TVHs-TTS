@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback, Suspense } from "react";
-import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell, Radio, FolderOpen, RefreshCw } from "lucide-react";
+import { Layers, Mic, MessageSquare, Sparkles, LayoutDashboard, Clock, Settings, Star, BookOpen, Search, Bell, Radio, FolderOpen, RefreshCw, Activity } from "lucide-react";
 import { showToast, ToastContainer } from "../components/toast";
 import { SetupScreen } from "../components/setup-screen";
 import { Sidebar } from "../components/sidebar";
@@ -11,6 +11,7 @@ import { VoiceLibrary } from "../components/voice-library";
 import { History } from "../components/history";
 import { Settings as SettingsPage } from "../components/settings";
 import { OmniVoicePanel } from "../components/omnivoice-panel";
+import { V3Panel } from "../components/v3-panel";
 import { useSystemStatus, useVoices, useModelSwitch, useHardware, useLora, useAudioHistory, useDialogue, useOmniVoice, useTtsGeneration } from "../hooks";
 import { LOGO_URL } from "../lib/constants";
 import { api } from "../lib/api";
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, breadcrumb: "Tổng quan", href: null },
   { id: "studio", label: "Studio", icon: Sparkles, breadcrumb: "Tạo giọng nói", href: null },
   { id: "omnivoice", label: "Custom Voice", icon: Radio, breadcrumb: "Thiết kế giọng riêng", href: null },
+  { id: "v3_preview", label: "v3 Turbo", icon: Activity, breadcrumb: "v3 Turbo (Preview)", href: null },
   { id: "voices", label: "Voices", icon: Mic, breadcrumb: "Thư viện giọng", href: null },
   { id: "history", label: "History", icon: Clock, breadcrumb: "Lịch sử audio", href: null },
   { id: "features", label: "Features", icon: Star, breadcrumb: "Tính năng", href: "/features" },
@@ -38,7 +40,7 @@ function HomeContent() {
 
   const [activePage, setActivePage] = useState(() => {
     const tab = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") : null;
-    return tab && ["dashboard", "studio", "omnivoice", "voices", "history", "settings"].includes(tab) ? tab : "dashboard";
+    return tab && ["dashboard", "studio", "omnivoice", "v3_preview", "voices", "history", "settings"].includes(tab) ? tab : "dashboard";
   });
   const [choosingOutput, setChoosingOutput] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -133,7 +135,7 @@ function HomeContent() {
           </a>
 
           <div className="flex flex-col items-center gap-1">
-            {NAV_ITEMS.slice(0, 5).map((item) => (
+            {NAV_ITEMS.slice(0, 6).map((item) => (
               <button key={item.id} onClick={() => navigateTo(item.id)} className={`group relative tvhs-icon-button ${activePage === item.id ? "tvhs-icon-button-active" : ""}`} title={item.label}>
                 <item.icon className="h-5 w-5" />
                 <Tooltip label={item.label} />
@@ -144,7 +146,7 @@ function HomeContent() {
           <div className="my-3 h-px w-7 bg-tvhs-border" />
 
           <div className="flex flex-col items-center gap-1">
-            {NAV_ITEMS.slice(5).map((item) => (
+            {NAV_ITEMS.slice(6).map((item) => (
               <a key={item.id} href={item.href || "#"} className="group relative tvhs-icon-button no-underline" title={item.label}>
                 <item.icon className="h-5 w-5" />
                 <Tooltip label={item.label} />
@@ -308,6 +310,7 @@ function HomeContent() {
                 {activePage === "history" && <History audioHistory={historyHook.audioHistory} onPlay={historyHook.playHistoryFile} onDelete={historyHook.handleDeleteAudio} />}
                 {activePage === "settings" && <SettingsPage status={statusHook.status} hardwareInfo={hardwareHook.hardwareInfo} detecting={hardwareHook.detecting} onDetectHardware={hardwareHook.handleDetectHardware} onReloadModel={() => statusHook.handleReloadModel()} onRefreshStatus={statusHook.checkStatus} />}
                 {activePage === "omnivoice" && <OmniVoicePanel {...ovHook} />}
+                {activePage === "v3_preview" && <V3Panel />}
               </div>
             )}
           </div>

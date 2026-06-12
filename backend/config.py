@@ -22,6 +22,7 @@ ALLOWED_ORIGINS = [
     "https://tauri.localhost",
 ]
 
+
 # ─── Base directory ──────────────────────────────────────────────────────────
 if getattr(sys, 'frozen', False):
     BUNDLE_DIR = Path(sys._MEIPASS)
@@ -36,6 +37,7 @@ else:
 
 MODELS_DIR = APP_DATA / "models"
 LOCAL_GGUF_DIR = MODELS_DIR / "base" / "VieNeu-TTS-v2-gguf"
+LOCAL_V3_DIR = MODELS_DIR / "base" / "VieNeu-TTS-v3-Turbo"
 LOCAL_LORA_DIR = MODELS_DIR / "lora"
 LOCAL_OMNIVOICE_DIR = MODELS_DIR / "omnivoice"
 

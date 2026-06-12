@@ -19,6 +19,11 @@ class EngineState:
         self.omnivoice_lock = threading.Lock()
         self.omnivoice_loaded = False
 
+        # VieNeu-TTS v3 Turbo separate state
+        self.v3_tts = None
+        self.v3_lock = threading.Lock()
+        self.v3_loaded = False
+
         # Download progress tracking
         self.download_progress = {
             "base": {"status": "idle", "progress": 0, "message": ""},
@@ -47,4 +52,11 @@ def require_omnivoice():
     """Dependency: ensure OmniVoice is loaded. Raises 503 if not."""
     if not state.omnivoice_loaded or state.omnivoice_tts is None:
         raise HTTPException(status_code=503, detail="OmniVoice not loaded. Call /v1/omnivoice/load first.")
+    return state
+
+
+def require_v3():
+    """Dependency: ensure v3 Turbo is loaded. Raises 503 if not."""
+    if not state.v3_loaded or state.v3_tts is None:
+        raise HTTPException(status_code=503, detail="v3 Turbo not loaded. Call /api/v3/load first.")
     return state
