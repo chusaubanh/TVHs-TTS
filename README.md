@@ -4,6 +4,8 @@
 
 # TVHs TTS — ThanhVinh Studio
 
+### 📥 [Tải bản cài đặt (Windows / macOS) trên Google Drive](https://drive.google.com/drive/folders/1s3o3K2_frEXx50cdkpcKxRImtLsFgG6y?usp=sharing)
+
 **Desktop app tạo giọng nói tiếng Việt chạy local trên máy người dùng**
 
 ![License](https://img.shields.io/badge/license-Apache--2.0-blue)
@@ -89,7 +91,7 @@ models/base/VieNeu-TTS-v2-gguf/
 
 ### Windows
 
-1. Tải `ThanhVinhStudio-Setup.exe` từ artifact hoặc release.
+1. Tải `ThanhVinhStudio-Setup.exe` từ [Google Drive](https://drive.google.com/drive/folders/1s3o3K2_frEXx50cdkpcKxRImtLsFgG6y?usp=sharing).
 2. Cài app.
 3. Mở Start Menu > `ThanhVinhStudio` hoặc shortcut desktop.
 4. Nếu chưa có model, chạy `Download Models`.
@@ -100,7 +102,7 @@ models/base/VieNeu-TTS-v2-gguf/
 
 macOS build hiện là unsigned vì chưa dùng Apple Developer Program.
 
-1. Tải `ThanhVinhStudio-macOS-unsigned.dmg` hoặc `.zip`.
+1. Tải `ThanhVinhStudio-macOS-unsigned.dmg` hoặc `.zip` từ [Google Drive](https://drive.google.com/drive/folders/1s3o3K2_frEXx50cdkpcKxRImtLsFgG6y?usp=sharing).
 2. Mở DMG, kéo app vào Applications nếu muốn.
 3. Chạy `Open First Time.command` nếu Gatekeeper chặn.
 4. Chạy `Download Models.command` để tải model lần đầu.
